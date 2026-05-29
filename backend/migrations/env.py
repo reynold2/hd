@@ -9,6 +9,7 @@ from app.db.models import (
     LineItemModel,
     MealSessionModel,
     OperationLogModel,
+    RoleBindingModel,
     ServiceCallModel,
     StaffModel,
     StoreModel,

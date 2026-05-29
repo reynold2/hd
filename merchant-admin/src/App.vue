@@ -14,8 +14,10 @@ import {
   Tickets,
   User
 } from '@element-plus/icons-vue'
+import { getStoredProfile, logoutAdmin } from './auth'
 
 const route = useRoute()
+const profile = computed(() => getStoredProfile())
 
 const navItems = [
   { label: '首页概览', path: '/', icon: House },
@@ -32,6 +34,11 @@ const navItems = [
 ]
 
 const activePath = computed(() => route.path)
+
+function handleLogout() {
+  logoutAdmin()
+  window.location.href = '/login'
+}
 </script>
 
 <template>
@@ -58,9 +65,9 @@ const activePath = computed(() => route.path)
       </nav>
 
       <div class="store-card">
-        <strong>川香麻辣烫（中山店）</strong>
-        <span>多角色操作台</span>
-        <button>门店配置</button>
+        <strong>{{ profile?.storeName || '川香麻辣烫（中山店）' }}</strong>
+        <span>{{ profile?.displayName || '多角色操作台' }}</span>
+        <button @click="handleLogout">退出登录</button>
       </div>
     </aside>
 

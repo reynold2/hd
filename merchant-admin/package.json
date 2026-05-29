@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test:unit": "node --experimental-strip-types --test src/*.test.mjs"
+    "test:unit": "node --experimental-strip-types --test src/*.test.mjs",
+    "seed:test-data": "node scripts/run-seed-test-data.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

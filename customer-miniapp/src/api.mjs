@@ -14,6 +14,26 @@ export function setApiBaseForTests(value) {
   testApiBase = value
 }
 
+export async function resolveRoleByOpenid(openid, storeId = 1) {
+  const response = await fetch(apiUrl(`/api/roles/resolve?openid=${encodeURIComponent(openid)}&store_id=${storeId}`))
+  if (!response.ok) {
+    throw new Error('角色解析失败')
+  }
+  return response.json()
+}
+
+export async function wechatLogin(payload) {
+  const response = await fetch(apiUrl('/api/auth/wechat-login'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    throw new Error('微信登录失败')
+  }
+  return response.json()
+}
+
 export async function fetchStoreCatalog(storeId = 1) {
   const response = await fetch(apiUrl(`/api/stores/${storeId}/catalog`))
   if (!response.ok) {

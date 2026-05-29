@@ -117,6 +117,7 @@ install_backend() {
   source .venv/bin/activate
   run python -m pip install -r requirements.txt
   run python -m alembic upgrade head
+  run python -m app.seed_data
   run python -m compileall app
 }
 

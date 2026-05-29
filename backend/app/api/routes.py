@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Generator, List, Optional, Set
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from app.db.session import create_session_factory, create_sqlite_engine
@@ -92,6 +92,11 @@ class LoginRequest(BaseModel):
     pin: str
 
 
+class WechatLoginRequest(BaseModel):
+    openid: str
+    store_id: int = Field(gt=0)
+
+
 class AppendRemarkRequest(BaseModel):
     remark: str
     source: str = "customer"
@@ -175,6 +180,16 @@ class LoginResponse(BaseModel):
     staff: StaffResponse
 
 
+class WechatRoleResponse(BaseModel):
+    user_id: int
+    display_name: str
+    openid: str
+    role: str
+    store_id: int
+    store: dict
+    entry_page: str
+
+
 class ServiceCallResponse(BaseModel):
     id: int
     store_id: int
@@ -208,6 +223,26 @@ def health():
 def login(payload: LoginRequest, repository: AuthRepository = Depends(get_auth_repository)):
     try:
         return repository.login(payload.store_id, payload.staff_name, payload.pin)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+
+@router.get("/api/roles/resolve", response_model=WechatRoleResponse)
+def resolve_role_by_openid(
+    openid: str,
+    store_id: int = Query(gt=0),
+    repository: AuthRepository = Depends(get_auth_repository),
+):
+    try:
+        return repository.resolve_wechat_role(openid, store_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.post("/api/auth/wechat-login", response_model=WechatRoleResponse)
+def wechat_login(payload: WechatLoginRequest, repository: AuthRepository = Depends(get_auth_repository)):
+    try:
+        return repository.wechat_login(payload.openid, payload.store_id)
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
 

@@ -7,6 +7,8 @@ import StoreView from './views/StoreView.vue'
 import ScreenView from './views/ScreenView.vue'
 import ReportsView from './views/ReportsView.vue'
 import PlatformView from './views/PlatformView.vue'
+import LoginView from './views/LoginView.vue'
+import RoleHomeView from './views/RoleHomeView.vue'
 
 export type AdminRouteMeta = {
   title: string
@@ -16,6 +18,16 @@ export type AdminRouteMeta = {
 
 export const routes: RouteRecordRaw[] = [
   {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: {
+      title: '后台登录',
+      crumb: '登录 / 入口',
+      description: '统一身份登录入口'
+    } satisfies AdminRouteMeta
+  },
+  {
     path: '/',
     name: 'dashboard',
     component: DashboardView,
@@ -23,6 +35,16 @@ export const routes: RouteRecordRaw[] = [
       title: '现场等餐全局掌控',
       crumb: '首页 / 经营概览',
       description: '发号、队列、收银和菜品的日常总览'
+    } satisfies AdminRouteMeta
+  },
+  {
+    path: '/home',
+    name: 'home',
+    component: RoleHomeView,
+    meta: {
+      title: '角色首页',
+      crumb: '首页 / 角色',
+      description: '登录后的角色入口'
     } satisfies AdminRouteMeta
   },
   {
@@ -130,4 +152,11 @@ export const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+router.beforeEach((to) => {
+  if (to.path !== '/login' && to.path !== '/home' && !localStorage.getItem('queue-admin-auth')) {
+    return '/login'
+  }
+  return true
 })

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 
-import { appendSessionRemark, createServiceCall, requestCheckout, setApiBaseForTests } from './api.mjs'
+import { appendSessionRemark, createServiceCall, requestCheckout, setApiBaseForTests, wechatLogin } from './api.mjs'
 
 const originalFetch = globalThis.fetch
 
@@ -54,6 +54,21 @@ test('prefixes customer API requests when an API base is configured', async () =
   await requestCheckout('A003')
 
   assert.equal(calls[0].url, '/fh/api/meal-sessions/A003/actions/request-checkout')
+})
+
+test('posts real wechat login payload to backend auth endpoint', async () => {
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ openid: 'openid_customer_001', role: 'customer', store_id: 1 })
+  }
+
+  const payload = await wechatLogin({ openid: 'openid_customer_001', store_id: 1 })
+
+  assert.equal(payload.role, 'customer')
+  assert.equal(calls[0].url, '/api/auth/wechat-login')
+  assert.equal(calls[0].options.method, 'POST')
+  assert.deepEqual(JSON.parse(calls[0].options.body), { openid: 'openid_customer_001', store_id: 1 })
 })
 
 function okJson(payload) {

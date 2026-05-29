@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import DishModel, StaffModel, StoreModel
+from app.db.models import DishModel, RoleBindingModel, StaffModel, StoreModel
 
 
 class CatalogRepository:
@@ -161,8 +161,49 @@ class CatalogRepository:
                 StaffModel(store_id=store.id, name="李店长", role="manager"),
                 StaffModel(store_id=store.id, name="王收银", role="cashier"),
                 StaffModel(store_id=store.id, name="赵师傅", role="cook"),
+                StaffModel(store_id=store.id, name="周服务", role="staff"),
             ]
         )
+        if store.id == 1:
+            self.db.add_all(
+                [
+                    RoleBindingModel(
+                        user_id=5,
+                        display_name="顾客测试号",
+                        role="customer",
+                        store_id=store.id,
+                        openid="openid_customer_001",
+                    ),
+                    RoleBindingModel(
+                        user_id=6,
+                        display_name="小程序老板",
+                        role="boss",
+                        store_id=store.id,
+                        openid="openid_boss_001",
+                    ),
+                    RoleBindingModel(
+                        user_id=7,
+                        display_name="小程序服务员",
+                        role="staff",
+                        store_id=store.id,
+                        openid="openid_staff_001",
+                    ),
+                    RoleBindingModel(
+                        user_id=8,
+                        display_name="小程序制作",
+                        role="kitchen",
+                        store_id=store.id,
+                        openid="openid_kitchen_001",
+                    ),
+                    RoleBindingModel(
+                        user_id=9,
+                        display_name="小程序收银",
+                        role="cashier",
+                        store_id=store.id,
+                        openid="openid_cashier_001",
+                    ),
+                ]
+            )
         self.db.commit()
         return self.db.scalar(select(StoreModel).where(StoreModel.id == store_id))
 

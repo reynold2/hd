@@ -59,6 +59,38 @@ def test_staff_can_login_and_receive_role_context():
     assert payload["staff"]["role"] == "manager"
 
 
+def test_wechat_openid_resolves_real_role_entry():
+    client.get("/api/stores/1/catalog")
+
+    response = client.get("/api/roles/resolve?openid=openid_customer_001&store_id=1")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["openid"] == "openid_customer_001"
+    assert payload["role"] == "customer"
+    assert payload["store_id"] == 1
+    assert payload["store"]["name"] == "川香麻辣烫（中山店）"
+    assert payload["entry_page"] == "/pages/detail/detail"
+
+
+def test_wechat_login_returns_seeded_account_profile():
+    client.get("/api/stores/1/catalog")
+
+    response = client.post(
+        "/api/auth/wechat-login",
+        json={"openid": "openid_kitchen_001", "store_id": 1},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["openid"] == "openid_kitchen_001"
+    assert payload["display_name"] == "小程序制作"
+    assert payload["role"] == "kitchen"
+    assert payload["store_id"] == 1
+    assert payload["store"]["id"] == 1
+    assert payload["entry_page"] == "/pages/kitchen/index"
+
+
 def test_protected_merchant_action_requires_login():
     response = client.post("/api/stores/1/queue/issue", json={"people_count": 2})
 

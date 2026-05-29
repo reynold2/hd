@@ -7,11 +7,19 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import StaffModel
+from app.db.models import RoleBindingModel, StaffModel
 from app.repositories.catalog import CatalogRepository
 
 
 TOKEN_SECRET = "queue-calling-dev-secret"
+
+ROLE_ENTRY_PAGES = {
+    "customer": "/pages/detail/detail",
+    "boss": "/pages/boss/index",
+    "staff": "/pages/staff/index",
+    "kitchen": "/pages/kitchen/index",
+    "cashier": "/pages/cashier/index",
+}
 
 
 @dataclass(frozen=True)
@@ -35,6 +43,21 @@ class AuthRepository:
             raise ValueError("invalid staff credentials")
         context = self._to_context(staff)
         return {"token": self.issue_token(context), "staff": self._context_payload(context)}
+
+    def resolve_wechat_role(self, openid: str, store_id: int) -> dict:
+        CatalogRepository(self.db).get_catalog(store_id)
+        binding = self.db.scalar(
+            select(RoleBindingModel)
+            .where(RoleBindingModel.openid == openid.strip())
+            .where(RoleBindingModel.store_id == store_id)
+        )
+        if binding is None or not binding.enabled:
+            raise ValueError("openid is not bound to this store")
+        catalog = CatalogRepository(self.db).get_catalog(store_id)
+        return self._role_binding_payload(binding, catalog["store"])
+
+    def wechat_login(self, openid: str, store_id: int) -> dict:
+        return self.resolve_wechat_role(openid, store_id)
 
     def issue_token(self, staff: StaffContext) -> str:
         payload = f"{staff.id}:{staff.store_id}:{staff.role}"
@@ -85,4 +108,15 @@ class AuthRepository:
             "name": staff.name,
             "role": staff.role,
             "status": staff.status,
+        }
+
+    def _role_binding_payload(self, binding: RoleBindingModel, store: dict) -> dict:
+        return {
+            "user_id": binding.user_id,
+            "display_name": binding.display_name,
+            "openid": binding.openid,
+            "role": binding.role,
+            "store_id": binding.store_id,
+            "store": store,
+            "entry_page": ROLE_ENTRY_PAGES.get(binding.role, "/pages/index/index"),
         }

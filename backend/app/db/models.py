@@ -117,3 +117,15 @@ class StaffModel(Base):
     status: Mapped[str] = mapped_column(String(32), default="active")
 
     store: Mapped[StoreModel] = relationship(back_populates="staff")
+
+
+class RoleBindingModel(Base):
+    __tablename__ = "role_bindings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(80))
+    role: Mapped[str] = mapped_column(String(32), index=True)
+    store_id: Mapped[int] = mapped_column(Integer, index=True)
+    openid: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    enabled: Mapped[int] = mapped_column(Integer, default=1)

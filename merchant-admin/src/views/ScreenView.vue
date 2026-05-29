@@ -1,128 +1,30 @@
-<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
-import { fetchStoreQueue, runSessionAction, type MealSession } from '../api'
-
-const storeId = 1
-const queue = ref<MealSession[]>([])
-const notice = ref('')
-const loading = ref(false)
-const lastRefreshAt = ref('')
-
-onMounted(loadScreen)
-
-async function loadScreen() {
-  loading.value = true
-  try {
-    queue.value = await fetchStoreQueue(storeId)
-    notice.value = ''
-    lastRefreshAt.value = new Date().toLocaleTimeString('zh-CN', { hour12: false })
-  } catch (error) {
-    notice.value = error instanceof Error ? error.message : '大屏加载失败'
-  } finally {
-    loading.value = false
-  }
-}
-
-const current = computed(() => queue.value.find((item) => ['called', 'dining', 'preparing'].includes(item.status)) || queue.value[0])
-const recent = computed(() => queue.value.slice(0, 8))
-const waiting = computed(() => queue.value.filter((item) => item.status === 'occupied'))
-const lastCalled = computed(() => queue.value.filter((item) => item.status === 'called').slice(0, 5))
-const waitingPreview = computed(() => waiting.value.slice(0, 8))
-
-async function refreshCall() {
-  if (!current.value) return
-  try {
-    await runSessionAction(current.value.number, 'call')
-    notice.value = `已重新播报 ${current.value.number}`
-    await loadScreen()
-  } catch (error) {
-    notice.value = error instanceof Error ? error.message : '播报失败'
-  }
-}
-</script>
-
 <template>
-  <div class="screen-page">
-    <header class="screen-header">
+  <div class="route-page screen-page">
+    <header class="topbar">
       <div>
         <p>展示 / 大屏</p>
-        <h1>当前叫号</h1>
-        <p v-if="notice" class="api-notice">{{ notice }}</p>
-        <p v-else class="screen-meta">最近刷新：{{ lastRefreshAt || '暂无' }}</p>
-      </div>
-      <div class="screen-header-actions">
-        <el-tag type="success">横屏展示</el-tag>
-        <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadScreen">刷新大屏</el-button>
+        <h1>门店大屏</h1>
+        <p class="route-description">实时叫号、等待队列与制作进度展示</p>
       </div>
     </header>
 
-    <section class="screen-hero">
-      <div class="screen-current">
-        <span>正在叫号</span>
-        <strong>{{ current?.number || 'A018' }}</strong>
-        <p>{{ current ? current.remark || '暂无备注' : '等待更多号码' }}</p>
-        <div class="screen-current-actions">
-          <el-button type="success" @click="refreshCall">重新播报</el-button>
-          <el-tag type="warning">{{ waiting.length }} 桌等待</el-tag>
-        </div>
-      </div>
-      <div class="screen-summary">
-        <article>
-          <span>最近叫号</span>
-          <strong>{{ recent.length }}</strong>
-          <small>已进入可视范围</small>
-        </article>
-        <article>
-          <span>等待队列</span>
-          <strong>{{ waiting.length }}</strong>
-          <small>未制作 / 待叫号</small>
-        </article>
-        <article>
-          <span>当前刷新</span>
-          <strong>{{ lastRefreshAt || '--:--' }}</strong>
-          <small>轮询更新</small>
-        </article>
-      </div>
-    </section>
-
     <section class="screen-grid">
-      <article class="panel screen-panel">
-        <div class="panel-title">
-          <h2>最近叫号</h2>
-          <span>近 8 个</span>
-        </div>
-        <div class="screen-list">
-          <div v-for="item in recent" :key="item.number" class="screen-row">
-            <strong>{{ item.number }}</strong>
-            <span>{{ item.status }}</span>
-          </div>
-        </div>
+      <article class="screen-current">
+        <span>当前叫号</span>
+        <strong>A018</strong>
+        <p>川香麻辣烫（中山店）</p>
       </article>
-
-      <article class="panel screen-panel">
-        <div class="panel-title">
-          <h2>最近已叫号码</h2>
-          <span>近 5 个</span>
-        </div>
-        <div class="screen-list">
-          <div v-for="item in lastCalled" :key="item.number" class="screen-row">
-            <strong>{{ item.number }}</strong>
-            <span>{{ item.people_count }} 人 · {{ item.remark || '无备注' }}</span>
-          </div>
-        </div>
+      <article class="screen-summary panel">
+        <article><span>等待中</span><strong>12</strong><small>单</small></article>
+        <article><span>制作中</span><strong>4</strong><small>单</small></article>
+        <article><span>待结账</span><strong>3</strong><small>单</small></article>
       </article>
-
-      <article class="panel screen-panel screen-panel-large">
-        <div class="panel-title">
-          <h2>等待队列</h2>
-          <span>现场排队</span>
-        </div>
-        <div class="waiting-board">
-          <div v-for="item in waitingPreview" :key="item.number" class="waiting-chip">
-            <strong>{{ item.number }}</strong>
-            <span>{{ item.people_count }} 人</span>
-          </div>
+      <article class="panel screen-panel-large">
+        <div class="panel-title"><h2>实时队列</h2></div>
+        <div class="screen-list">
+          <div class="screen-row"><strong>A019</strong><span>等待中</span><span>18 分钟</span></div>
+          <div class="screen-row"><strong>A020</strong><span>制作中</span><span>12 分钟</span></div>
+          <div class="screen-row"><strong>A021</strong><span>待结账</span><span>5 分钟</span></div>
         </div>
       </article>
     </section>

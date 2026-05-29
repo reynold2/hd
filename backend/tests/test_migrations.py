@@ -32,5 +32,6 @@ def test_alembic_initial_migration_covers_current_tables():
         "stores",
         "dishes",
         "staff",
+        "role_bindings",
     ]:
         assert table_name in migration_text

@@ -1,6 +1,14 @@
 {
   "pages": [
     {
+      "path": "pages/test-home/index",
+      "style": {
+        "navigationBarTitleText": "测试用户入口",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "等锅叫号",
@@ -12,6 +20,38 @@
       "path": "pages/detail/detail",
       "style": {
         "navigationBarTitleText": "号码详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
+      "path": "pages/boss/index",
+      "style": {
+        "navigationBarTitleText": "老板端",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
+      "path": "pages/staff/index",
+      "style": {
+        "navigationBarTitleText": "服务员端",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
+      "path": "pages/kitchen/index",
+      "style": {
+        "navigationBarTitleText": "制作端",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
+      "path": "pages/cashier/index",
+      "style": {
+        "navigationBarTitleText": "收银端",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#f7f8fb"
       }
