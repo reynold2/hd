@@ -1,7 +1,21 @@
-const API_BASE = ''
+let testApiBase = null
+
+function configuredApiBase() {
+  if (testApiBase !== null) return testApiBase
+  return import.meta.env?.VITE_API_BASE || ''
+}
+
+function apiUrl(path) {
+  const base = configuredApiBase().replace(/\/$/, '')
+  return `${base}${path}`
+}
+
+export function setApiBaseForTests(value) {
+  testApiBase = value
+}
 
 export async function fetchStoreCatalog(storeId = 1) {
-  const response = await fetch(`${API_BASE}/api/stores/${storeId}/catalog`)
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/catalog`))
   if (!response.ok) {
     throw new Error('门店信息加载失败')
   }
@@ -9,7 +23,7 @@ export async function fetchStoreCatalog(storeId = 1) {
 }
 
 export async function fetchMealSession(number) {
-  const response = await fetch(`${API_BASE}/api/meal-sessions/${number}`)
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}`))
   if (!response.ok) {
     throw new Error('号码信息加载失败')
   }
@@ -17,7 +31,7 @@ export async function fetchMealSession(number) {
 }
 
 export async function issueQueueNumber(storeId = 1, payload = { people_count: 2, remark: '' }) {
-  const response = await fetch(`${API_BASE}/api/stores/${storeId}/queue/issue`, {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/queue/issue`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -29,7 +43,7 @@ export async function issueQueueNumber(storeId = 1, payload = { people_count: 2,
 }
 
 export async function addSessionItem(number, item) {
-  const response = await fetch(`${API_BASE}/api/meal-sessions/${number}/items`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/items`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -41,7 +55,7 @@ export async function addSessionItem(number, item) {
 }
 
 export async function appendSessionRemark(number, payload) {
-  const response = await fetch(`${API_BASE}/api/meal-sessions/${number}/remarks`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/remarks`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -53,7 +67,7 @@ export async function appendSessionRemark(number, payload) {
 }
 
 export async function createServiceCall(number, payload) {
-  const response = await fetch(`${API_BASE}/api/meal-sessions/${number}/service-calls`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/service-calls`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -65,7 +79,7 @@ export async function createServiceCall(number, payload) {
 }
 
 export async function requestCheckout(number) {
-  const response = await fetch(`${API_BASE}/api/meal-sessions/${number}/actions/request-checkout`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/request-checkout`), {
     method: 'POST'
   })
   if (!response.ok) {

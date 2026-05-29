@@ -31,8 +31,24 @@ export type StoreCatalog = {
   staff: Array<{ id: number; name: string; role: string; status: string }>
 }
 
+let testApiBase: string | null = null
+
+function configuredApiBase() {
+  if (testApiBase !== null) return testApiBase
+  return import.meta.env?.VITE_API_BASE || ''
+}
+
+export function apiUrl(path: string) {
+  const base = configuredApiBase().replace(/\/$/, '')
+  return `${base}${path}`
+}
+
+export function setApiBaseForTests(value: string) {
+  testApiBase = value
+}
+
 export async function fetchStoreCatalog(storeId = 1): Promise<StoreCatalog> {
-  const response = await fetch(`/api/stores/${storeId}/catalog`)
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/catalog`))
   if (!response.ok) {
     throw new Error('门店信息加载失败')
   }
@@ -40,7 +56,7 @@ export async function fetchStoreCatalog(storeId = 1): Promise<StoreCatalog> {
 }
 
 export async function fetchStoreQueue(storeId = 1): Promise<MealSession[]> {
-  const response = await fetch(`/api/stores/${storeId}/queue`)
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/queue`))
   if (!response.ok) {
     throw new Error('队列加载失败')
   }
@@ -48,7 +64,7 @@ export async function fetchStoreQueue(storeId = 1): Promise<MealSession[]> {
 }
 
 export async function updateBusinessStatus(storeId: number, businessStatus: 'open' | 'paused' | 'closed') {
-  const response = await fetch(`/api/stores/${storeId}/business-status`, {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/business-status`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ business_status: businessStatus })
@@ -63,7 +79,7 @@ export async function updateStoreSettings(
   storeId: number,
   payload: { business_hours?: string; address?: string; queue_prefix?: string; avg_prepare_minutes?: number }
 ) {
-  const response = await fetch(`/api/stores/${storeId}/settings`, {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/settings`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -75,7 +91,7 @@ export async function updateStoreSettings(
 }
 
 export async function updateStaffStatus(staffId: number, status: 'active' | 'inactive') {
-  const response = await fetch(`/api/staff/${staffId}/status`, {
+  const response = await fetch(apiUrl(`/api/staff/${staffId}/status`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
@@ -87,7 +103,7 @@ export async function updateStaffStatus(staffId: number, status: 'active' | 'ina
 }
 
 export async function createDish(storeId: number, payload: { name: string; category: string; price: string; available: boolean }) {
-  const response = await fetch(`/api/stores/${storeId}/dishes`, {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/dishes`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -99,7 +115,7 @@ export async function createDish(storeId: number, payload: { name: string; categ
 }
 
 export async function updateDish(dishId: number, payload: { available?: boolean; price?: string; name?: string; category?: string }) {
-  const response = await fetch(`/api/dishes/${dishId}`, {
+  const response = await fetch(apiUrl(`/api/dishes/${dishId}`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -111,7 +127,7 @@ export async function updateDish(dishId: number, payload: { available?: boolean;
 }
 
 export async function issueQueueNumber(storeId = 1, payload = { people_count: 2, remark: '' }) {
-  const response = await fetch(`/api/stores/${storeId}/queue/issue`, {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/queue/issue`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -134,7 +150,7 @@ export type SessionAction =
   | 'mark-unpaid-risk'
 
 export async function runSessionAction(number: string, action: SessionAction) {
-  const response = await fetch(`/api/meal-sessions/${number}/actions/${action}`, { method: 'POST' })
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/${action}`), { method: 'POST' })
   if (!response.ok) {
     throw new Error('操作失败')
   }
@@ -146,7 +162,7 @@ export async function confirmPayment(
   cashierId = 1,
   paymentMethod: 'store_qr' | 'cash' | 'other' = 'store_qr'
 ) {
-  const response = await fetch(`/api/meal-sessions/${number}/actions/confirm-payment`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/confirm-payment`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ payment_method: paymentMethod, cashier_id: cashierId })
@@ -158,7 +174,7 @@ export async function confirmPayment(
 }
 
 export async function fetchCashierPending(storeId = 1): Promise<MealSession[]> {
-  const response = await fetch(`/api/stores/${storeId}/cashier/pending`)
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/cashier/pending`))
   if (!response.ok) {
     throw new Error('待结账列表加载失败')
   }
@@ -166,7 +182,7 @@ export async function fetchCashierPending(storeId = 1): Promise<MealSession[]> {
 }
 
 export async function fetchMealSession(number: string): Promise<MealSession & { store_id: number }> {
-  const response = await fetch(`/api/meal-sessions/${number}`)
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}`))
   if (!response.ok) {
     throw new Error('号码详情加载失败')
   }
@@ -174,7 +190,7 @@ export async function fetchMealSession(number: string): Promise<MealSession & { 
 }
 
 export async function adjustSessionRemark(number: string, remark: string, source = 'cashier') {
-  const response = await fetch(`/api/meal-sessions/${number}/remarks`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/remarks`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ remark, source })
@@ -189,7 +205,7 @@ export async function addCashierLineItem(
   number: string,
   payload: { name: string; amount: string; source: 'cashier'; quantity: number; note?: string }
 ) {
-  const response = await fetch(`/api/meal-sessions/${number}/items`, {
+  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/items`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)

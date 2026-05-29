@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 
-import { appendSessionRemark, createServiceCall, requestCheckout } from './api.mjs'
+import { appendSessionRemark, createServiceCall, requestCheckout, setApiBaseForTests } from './api.mjs'
 
 const originalFetch = globalThis.fetch
 
 afterEach(() => {
   globalThis.fetch = originalFetch
+  setApiBaseForTests('')
 })
 
 test('posts customer remark append payload to the bound session endpoint', async () => {
@@ -40,6 +41,19 @@ test('posts service calls and checkout requests with the expected methods', asyn
   assert.deepEqual(JSON.parse(calls[0].options.body), { message: '需要餐巾纸', source: 'customer' })
   assert.equal(calls[1].url, '/api/meal-sessions/A002/actions/request-checkout')
   assert.equal(calls[1].options.method, 'POST')
+})
+
+test('prefixes customer API requests when an API base is configured', async () => {
+  setApiBaseForTests('/fh')
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ ok: true })
+  }
+
+  await requestCheckout('A003')
+
+  assert.equal(calls[0].url, '/fh/api/meal-sessions/A003/actions/request-checkout')
 })
 
 function okJson(payload) {
