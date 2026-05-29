@@ -12,6 +12,7 @@ API_BASE="${API_BASE:-/api}"
 BACKEND_PORT="${BACKEND_PORT:-8020}"
 PYTHON_BIN="${PYTHON_BIN:-python3.11}"
 NGINX_VHOST_DIR="${NGINX_VHOST_DIR:-/www/server/panel/vhost/nginx}"
+ORIGIN_CERT_DIR="${ORIGIN_CERT_DIR:-/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech}"
 GITHUB_TOKEN_FILE="${GITHUB_TOKEN_FILE:-/root/.config/hd-queue/github_token}"
 BUILD_SWAP_FILE="${BUILD_SWAP_FILE:-/www/swap-codex-build-hd}"
 BUILD_SWAP_SIZE="${BUILD_SWAP_SIZE:-2G}"
@@ -202,8 +203,24 @@ build_miniapp() {
   fi
 }
 
+ensure_origin_cert() {
+  if [[ -f "${ORIGIN_CERT_DIR}/fullchain.pem" && -f "${ORIGIN_CERT_DIR}/privkey.pem" ]]; then
+    log "Origin certificate already exists: ${ORIGIN_CERT_DIR}"
+    return
+  fi
+
+  run mkdir -p "$ORIGIN_CERT_DIR"
+  run openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
+    -keyout "${ORIGIN_CERT_DIR}/privkey.pem" \
+    -out "${ORIGIN_CERT_DIR}/fullchain.pem" \
+    -subj "/CN=${DOMAIN}" \
+    -addext "subjectAltName=DNS:${DOMAIN}"
+  run chmod 600 "${ORIGIN_CERT_DIR}/privkey.pem"
+}
+
 reload_nginx() {
   local target_conf="${NGINX_VHOST_DIR}/${DOMAIN}.conf"
+  ensure_origin_cert
   run cp "$APP_DIR/deploy/hd/nginx-hd.yxck3d.tech.conf" "$target_conf"
   run nginx -t
   run nginx -s reload

@@ -62,8 +62,9 @@ The script will:
 5. Build merchant admin with `VITE_API_BASE=/api` and base `/admin/`.
 6. Build customer H5 with `VITE_API_BASE=/api` and base `/customer/`.
 7. Optionally build WeChat miniapp with `VITE_API_BASE=https://hd.yxck3d.tech` when `SKIP_MINIAPP_BUILD=0`.
-8. Copy `deploy/hd/nginx-hd.yxck3d.tech.conf` into the Nginx vhost directory.
-9. Run `nginx -t`, reload Nginx, and verify health URLs.
+8. Ensure an isolated origin certificate exists under `/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech`.
+9. Copy `deploy/hd/nginx-hd.yxck3d.tech.conf` into the Nginx vhost directory.
+10. Run `nginx -t`, reload Nginx, and verify health URLs.
 
 ## WeChat Mini Program Domain Checklist
 
@@ -94,7 +95,7 @@ DNS record:
 hd.yxck3d.tech A 8.141.105.10 proxied
 ```
 
-Because Cloudflare is proxied, the public HTTPS certificate is provided by Cloudflare. Keep Cloudflare SSL/TLS mode compatible with the origin. If switching to Full (strict), install a valid origin certificate for `hd.yxck3d.tech` before enabling strict mode.
+Because Cloudflare is proxied, the public HTTPS certificate is provided by Cloudflare. The deploy script also ensures the origin has an isolated `hd.yxck3d.tech` certificate so HTTPS requests from Cloudflare hit the HD 443 vhost instead of another site's default vhost. If switching to Full (strict), replace the generated origin certificate with a Cloudflare Origin Certificate or another certificate trusted by Cloudflare strict mode.
 
 ## Checks
 

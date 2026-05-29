@@ -14,6 +14,8 @@ def test_hd_deploy_script_uses_isolated_defaults():
     assert "SERVICE_NAME=\"${SERVICE_NAME:-hd-queue.service}\"" in content
     assert "DOMAIN=\"${DOMAIN:-hd.yxck3d.tech}\"" in content
     assert "BACKEND_PORT=\"${BACKEND_PORT:-8020}\"" in content
+    assert "ensure_origin_cert" in content
+    assert "/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech" in content
     assert "/www/dk_project/wwwroot/yuyue-saas" not in content
     assert "yuyue-saas.service" not in content
 
@@ -24,6 +26,8 @@ def test_hd_nginx_conf_uses_domain_root_and_dedicated_backend():
     content = nginx_conf.read_text(encoding="utf-8")
 
     assert "server_name hd.yxck3d.tech;" in content
+    assert "listen 443 ssl;" in content
+    assert "ssl_certificate /www/server/panel/vhost/letsencrypt/hd.yxck3d.tech/fullchain.pem;" in content
     assert "proxy_pass http://127.0.0.1:8020/api/;" in content
     assert "alias /www/dk_project/wwwroot/hd/merchant-admin/dist/;" in content
     assert "alias /www/dk_project/wwwroot/hd/customer-miniapp/dist/build/h5/;" in content
