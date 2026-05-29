@@ -2,8 +2,9 @@ page,
 body {
   margin: 0;
   min-height: 100%;
-  background: #f7f8fb;
-  color: #161f2d;
+  background:
+    radial-gradient(circle at top, #fffaf4 0%, #f7f8fb 36%, #eef2f7 100%);
+  color: #1f2937;
   font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
 }
 
@@ -14,15 +15,20 @@ button {
 
 .page {
   min-height: 100vh;
-  padding: 18px 16px 106px;
+  padding: 18px 16px 110px;
+}
+
+.hero,
+.top-banner {
+  border-radius: 20px;
+  background: linear-gradient(135deg, #171d2b 0%, #1f2937 48%, #ff6a2a 150%);
+  color: #fff;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.15);
 }
 
 .hero {
-  min-height: 118px;
-  padding: 18px;
-  border-radius: 8px;
-  color: #fff;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 45%, #ff5a1f 160%);
+  min-height: 126px;
+  padding: 18px 18px 20px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -31,8 +37,9 @@ button {
 
 .store-name {
   display: block;
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
 }
 
 .store-meta {
@@ -40,74 +47,83 @@ button {
   gap: 5px;
   margin-top: 10px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .ghost-button {
-  min-width: 78px;
-  height: 32px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.14);
+  min-width: 82px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
   font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .api-notice,
 .action-notice {
-  margin: 10px 0 -4px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #fff7ed;
-  color: #f97316;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
   font-size: 12px;
+  line-height: 1.5;
+}
+
+.api-notice {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
 }
 
 .action-notice {
   background: #ecfdf5;
-  color: #16a34a;
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
 .bind-card {
   display: grid;
-  grid-template-columns: 1fr 96px;
+  grid-template-columns: 1fr 104px;
   gap: 10px;
-  margin: 12px 0 32px;
-  padding: 10px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #edf0f5;
-  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.05);
+  margin: 14px 0 28px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid #eef2f7;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(10px);
 }
 
 .bind-card input {
   min-width: 0;
-  height: 40px;
-  padding: 0 10px;
-  border-radius: 6px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
   background: #f8fafc;
-  color: #161f2d;
+  color: #111827;
 }
 
 .bind-card button {
-  height: 40px;
-  border-radius: 6px;
+  height: 44px;
+  border-radius: 12px;
   color: #fff;
-  background: #16a34a;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
   font-weight: 800;
+  box-shadow: 0 10px 18px rgba(34, 197, 94, 0.24);
 }
 
 .number-card,
 .card,
 .checkout-bar {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.06);
-  border: 1px solid #edf0f5;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e9eef5;
 }
 
 .number-card {
-  margin-top: -24px;
-  padding: 20px;
+  margin-top: -18px;
+  padding: 22px 18px 20px;
   text-align: center;
 }
 
@@ -124,11 +140,13 @@ button {
 .number-head {
   text-align: left;
   color: #64748b;
+  font-size: 13px;
 }
 
 .status-pill {
-  color: #ff5a1f;
+  color: #ea580c;
   background: #fff1ea;
+  border: 1px solid #fed7aa;
   border-radius: 999px;
   padding: 4px 10px;
 }
@@ -136,16 +154,18 @@ button {
 .number {
   display: block;
   color: #ff4b16;
-  font-size: 76px;
+  font-size: 78px;
   line-height: 1;
   font-weight: 900;
-  margin-top: 18px;
+  margin-top: 16px;
+  letter-spacing: 1px;
 }
 
 .number-tip {
   display: block;
   margin-top: 10px;
   color: #334155;
+  font-size: 13px;
 }
 
 .number-metrics {
@@ -155,9 +175,9 @@ button {
 
 .number-metrics view {
   flex: 1;
-  padding: 12px;
+  padding: 12px 10px;
   background: #f8fafc;
-  border-radius: 8px;
+  border-radius: 14px;
 }
 
 .number-metrics text {
@@ -166,7 +186,7 @@ button {
 
 .number-metrics text:first-child {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 900;
   color: #16a34a;
 }
 
@@ -184,11 +204,12 @@ button {
 }
 
 .quick-actions button {
-  min-height: 74px;
-  background: #fff;
-  border-radius: 8px;
+  min-height: 78px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
   color: #334155;
-  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.05);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  border: 1px solid #eef2f7;
 }
 
 .quick-actions text {
@@ -196,14 +217,14 @@ button {
 }
 
 .quick-actions text:first-child {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   margin: 0 auto 8px;
   color: #fff;
-  border-radius: 8px;
-  background: #16a34a;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
 }
 
 .card {
@@ -217,7 +238,7 @@ button {
 
 .section-title text:first-child {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .section-title text:last-child {
@@ -228,7 +249,7 @@ button {
 .section-title button {
   height: 30px;
   padding: 0 12px;
-  border-radius: 6px;
+  border-radius: 999px;
   color: #16a34a;
   background: #eaf8f0;
 }
@@ -275,10 +296,11 @@ button {
 }
 
 .item-cloud text {
-  padding: 7px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
   background: #f1f5f9;
   color: #334155;
+  font-size: 12px;
 }
 
 .remark {
@@ -304,11 +326,11 @@ button {
 
 .remark-editor textarea {
   width: 100%;
-  min-height: 82px;
-  padding: 10px;
-  border-radius: 8px;
+  min-height: 90px;
+  padding: 12px;
+  border-radius: 14px;
   background: #f8fafc;
-  color: #161f2d;
+  color: #111827;
   font-size: 14px;
 }
 
@@ -322,32 +344,32 @@ button {
   height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  color: #16a34a;
+  color: #166534;
   background: #eaf8f0;
 }
 
 .primary-line-button,
 .service-card button {
-  height: 42px;
-  border-radius: 8px;
+  height: 44px;
+  border-radius: 14px;
   color: #fff;
-  background: #16a34a;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
   font-weight: 800;
 }
 
 .service-card {
   display: grid;
-  grid-template-columns: 1fr 104px;
+  grid-template-columns: 1fr 112px;
   gap: 10px;
 }
 
 .service-card input {
   min-width: 0;
-  height: 42px;
-  padding: 0 10px;
-  border-radius: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 14px;
   background: #f8fafc;
-  color: #161f2d;
+  color: #111827;
 }
 
 .dish-list {
@@ -357,13 +379,17 @@ button {
 
 .dish-row {
   gap: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #f8fafc;
 }
 
 .dish-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #ffb86b, #ff5a1f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .dish-row view:nth-child(2) {
@@ -384,10 +410,10 @@ button {
 }
 
 .dish-row button {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #16a34a;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
   color: #fff;
   font-size: 20px;
 }
@@ -397,7 +423,9 @@ button {
   left: 16px;
   right: 16px;
   bottom: 18px;
-  padding: 12px;
+  padding: 12px 12px 12px 14px;
+  gap: 12px;
+  border-radius: 18px;
 }
 
 .checkout-bar text {
@@ -410,14 +438,14 @@ button {
 }
 
 .checkout-bar text:last-child {
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .checkout-bar button {
-  height: 44px;
-  min-width: 128px;
-  border-radius: 8px;
-  background: #ff5a1f;
+  height: 46px;
+  min-width: 132px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff5a1f, #ff7a33);
   color: #fff;
   font-weight: 800;
 }
@@ -440,13 +468,13 @@ button {
   box-sizing: border-box;
   padding: 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 14px;
   background: #f8fafc;
-  color: #161f2d;
+  color: #111827;
 }
 
 .remark-editor textarea {
-  min-height: 72px;
+  min-height: 78px;
 }
 
 .remark-tags {
@@ -459,15 +487,15 @@ button {
 .primary-line-button,
 .service-card button,
 .ghost-link {
-  height: 34px;
-  border-radius: 6px;
-  color: #16a34a;
+  height: 36px;
+  border-radius: 999px;
+  color: #166534;
   background: #eaf8f0;
   font-weight: 700;
 }
 
 .remark-tags button {
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .primary-line-button,
@@ -503,7 +531,7 @@ button {
 }
 
 .ghost-link.primary-link {
-  background: #16a34a;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
   color: #fff;
 }
 
@@ -513,9 +541,6 @@ button {
   gap: 12px;
   margin-bottom: 12px;
   padding: 14px 16px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1f2937, #111827);
-  color: #fff;
 }
 
 .page.compact-page {
@@ -527,4 +552,12 @@ button {
   color: #64748b;
   font-size: 12px;
   text-align: center;
+}
+
+.refresh-hint {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf0f5;
+  color: #64748b;
+  font-size: 12px;
 }

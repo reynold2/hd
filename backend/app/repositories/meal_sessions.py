@@ -45,6 +45,16 @@ class MealSessionRepository:
             return None
         return self._to_domain(model)
 
+    def get_by_store(self, store_id: int, number: str) -> Optional[MealSession]:
+        model = self.db.scalar(
+            select(MealSessionModel)
+            .where(MealSessionModel.store_id == store_id)
+            .where(MealSessionModel.number == number.strip().upper())
+        )
+        if model is None:
+            return None
+        return self._to_domain(model)
+
     def list_active(self, store_id: int) -> List[MealSession]:
         rows = self.db.scalars(
             select(MealSessionModel)

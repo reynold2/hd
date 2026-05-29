@@ -25,9 +25,10 @@ async function loadScreen() {
 }
 
 const current = computed(() => queue.value.find((item) => ['called', 'dining', 'preparing'].includes(item.status)) || queue.value[0])
-const recent = computed(() => queue.value.slice(0, 6))
+const recent = computed(() => queue.value.slice(0, 8))
 const waiting = computed(() => queue.value.filter((item) => item.status === 'occupied'))
-const lastCalled = computed(() => queue.value.filter((item) => item.status === 'called').slice(0, 3))
+const lastCalled = computed(() => queue.value.filter((item) => item.status === 'called').slice(0, 5))
+const waitingPreview = computed(() => waiting.value.slice(0, 8))
 
 async function refreshCall() {
   if (!current.value) return
@@ -50,7 +51,10 @@ async function refreshCall() {
         <p v-if="notice" class="api-notice">{{ notice }}</p>
         <p v-else class="screen-meta">最近刷新：{{ lastRefreshAt || '暂无' }}</p>
       </div>
-      <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadScreen">刷新大屏</el-button>
+      <div class="screen-header-actions">
+        <el-tag type="success">横屏展示</el-tag>
+        <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadScreen">刷新大屏</el-button>
+      </div>
     </header>
 
     <section class="screen-hero">
@@ -58,28 +62,35 @@ async function refreshCall() {
         <span>正在叫号</span>
         <strong>{{ current?.number || 'A018' }}</strong>
         <p>{{ current ? current.remark || '暂无备注' : '等待更多号码' }}</p>
-        <el-button type="success" @click="refreshCall">重新播报</el-button>
+        <div class="screen-current-actions">
+          <el-button type="success" @click="refreshCall">重新播报</el-button>
+          <el-tag type="warning">{{ waiting.length }} 桌等待</el-tag>
+        </div>
       </div>
       <div class="screen-summary">
         <article>
           <span>最近叫号</span>
           <strong>{{ recent.length }}</strong>
+          <small>已进入可视范围</small>
         </article>
         <article>
           <span>等待队列</span>
           <strong>{{ waiting.length }}</strong>
+          <small>未制作 / 待叫号</small>
         </article>
         <article>
           <span>当前刷新</span>
           <strong>{{ lastRefreshAt || '--:--' }}</strong>
+          <small>轮询更新</small>
         </article>
       </div>
     </section>
 
     <section class="screen-grid">
-      <article class="panel">
+      <article class="panel screen-panel">
         <div class="panel-title">
           <h2>最近叫号</h2>
+          <span>近 8 个</span>
         </div>
         <div class="screen-list">
           <div v-for="item in recent" :key="item.number" class="screen-row">
@@ -89,9 +100,10 @@ async function refreshCall() {
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel screen-panel">
         <div class="panel-title">
           <h2>最近已叫号码</h2>
+          <span>近 5 个</span>
         </div>
         <div class="screen-list">
           <div v-for="item in lastCalled" :key="item.number" class="screen-row">
@@ -101,14 +113,15 @@ async function refreshCall() {
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel screen-panel screen-panel-large">
         <div class="panel-title">
           <h2>等待队列</h2>
+          <span>现场排队</span>
         </div>
-        <div class="screen-list">
-          <div v-for="item in waiting" :key="item.number" class="screen-row">
+        <div class="waiting-board">
+          <div v-for="item in waitingPreview" :key="item.number" class="waiting-chip">
             <strong>{{ item.number }}</strong>
-            <span>{{ item.people_count }} 人 · {{ item.remark || '无备注' }}</span>
+            <span>{{ item.people_count }} 人</span>
           </div>
         </div>
       </article>

@@ -128,12 +128,6 @@ class CatalogRepository:
             raise KeyError("dish not found")
         return dish.store_id
 
-    def get_dish_store_id(self, dish_id: int) -> int:
-        dish = self.db.get(DishModel, dish_id)
-        if dish is None:
-            raise KeyError("dish not found")
-        return dish.store_id
-
     def _get_or_seed_store(self, store_id: int) -> StoreModel:
         store = self.db.get(StoreModel, store_id)
         if store is not None:

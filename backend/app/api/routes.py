@@ -347,8 +347,7 @@ def confirm_payment(
     staff: StaffContext = Depends(get_current_staff),
 ):
     require_roles(staff, {"boss", "manager", "cashier"})
-    session = get_session(number, repository)
-    require_store(staff, session.store_id)
+    session = get_session_for_staff(number, staff, repository)
     try:
         session.confirm_payment(payload.payment_method, payload.cashier_id)
     except ValueError as exc:
@@ -624,8 +623,7 @@ def run_staff_action(
     repository: MealSessionRepository,
     staff: StaffContext,
 ):
-    session = get_session(number, repository)
-    require_store(staff, session.store_id)
+    session = get_session_for_staff(number, staff, repository)
     try:
         getattr(session, method_name)()
     except ValueError as exc:
@@ -636,6 +634,18 @@ def run_staff_action(
 def get_session(number: str, repository: MealSessionRepository) -> MealSession:
     session = repository.get(number)
     if session is None:
+        raise HTTPException(status_code=404, detail="meal session not found")
+    return session
+
+
+def get_session_for_staff(number: str, staff: StaffContext, repository: MealSessionRepository) -> MealSession:
+    session = repository.get_by_store(staff.store_id, number)
+    if session is not None:
+        return session
+    session = repository.get(number)
+    if session is not None:
+        require_store(staff, session.store_id)
+    else:
         raise HTTPException(status_code=404, detail="meal session not found")
     return session
 

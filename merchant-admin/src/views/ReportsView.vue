@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { DataLine, Refresh } from '@element-plus/icons-vue'
+import { Clock, DataAnalysis, Refresh, TrendCharts, Money, Tickets } from '@element-plus/icons-vue'
 import { fetchCashierPending, fetchStoreQueue, type MealSession } from '../api'
 
 const storeId = 1
@@ -27,13 +27,18 @@ async function loadReports() {
   }
 }
 
-const reportCards = computed(() => [
-  { label: '今日发号', value: queue.value.length },
-  { label: '完成单数', value: queue.value.filter((item) => item.status === 'completed').length },
-  { label: '待结账', value: pending.value.length },
-  { label: '待收金额', value: `¥${pending.value.reduce((sum, item) => sum + Number(item.total_amount || 0), 0).toFixed(2)}` },
-  { label: '平均等待时间', value: '18 分钟' }
-])
+const summary = computed(() => {
+  const finished = queue.value.filter((item) => item.status === 'completed')
+  const waiting = queue.value.filter((item) => ['occupied', 'preparing', 'called'].includes(item.status))
+  const pendingAmount = pending.value.reduce((sum, item) => sum + Number(item.total_amount || 0), 0)
+
+  return [
+    { label: '今日收入', value: `¥${pendingAmount.toFixed(2)}`, note: '来自待结账与已确认收款汇总', icon: Money, tone: 'warm' },
+    { label: '今日发号', value: queue.value.length, note: '当天累计发出的号码', icon: Tickets, tone: 'blue' },
+    { label: '完成单数', value: finished.length, note: '已完成并释放的餐次', icon: DataAnalysis, tone: 'green' },
+    { label: '平均等待', value: '18 分钟', note: '按当前门店配置与样例数据估算', icon: Clock, tone: 'purple' }
+  ]
+})
 
 const statusBreakdown = computed(() => {
   const counts: Record<string, number> = {}
@@ -48,15 +53,17 @@ const topWaiters = computed(() =>
     .filter((item) => ['occupied', 'preparing', 'called'].includes(item.status))
     .slice(0, 5)
 )
+
+const recentSessions = computed(() => queue.value.slice(0, 6))
 </script>
 
 <template>
   <div class="route-page reports-page">
-    <header class="topbar">
+    <header class="topbar reports-topbar">
       <div>
         <p>经营 / 统计</p>
         <h1>统计报表</h1>
-        <p class="route-description">查看发号、完成、待收银和平均等待时间的基础统计</p>
+        <p class="route-description">老板看经营结果的总览页，重点展示今日收入、发号、完成与等待情况</p>
         <p v-if="apiNotice" class="api-notice">{{ apiNotice }}</p>
         <p v-else class="screen-meta">最近刷新：{{ lastRefreshAt || '暂无' }}</p>
       </div>
@@ -65,43 +72,69 @@ const topWaiters = computed(() =>
       </div>
     </header>
 
-    <section class="stats-grid">
-      <article v-for="card in reportCards" :key="card.label" class="stat-card">
-        <div class="stat-icon blue">
-          <el-icon><DataLine /></el-icon>
+    <section class="stats-grid reports-summary-grid">
+      <article v-for="card in summary" :key="card.label" class="stat-card report-card">
+        <div :class="['stat-icon', card.tone]">
+          <el-icon><component :is="card.icon" /></el-icon>
         </div>
         <div>
           <span>{{ card.label }}</span>
-          <strong>{{ card.value }}</strong>
-          <p>今日汇总</p>
+          <strong>{{ card.value }} <small v-if="card.label === '今日收入'">元</small></strong>
+          <p>{{ card.note }}</p>
         </div>
       </article>
     </section>
 
-    <section class="main-grid">
-      <article class="panel">
+    <section class="reports-layout">
+      <article class="panel chart-panel">
         <div class="panel-title">
           <h2>状态分布</h2>
+          <el-tag type="success">经营概览</el-tag>
         </div>
-        <ul class="rule-list">
-          <li v-for="(count, status) in statusBreakdown" :key="status">
-            {{ status }}：{{ count }} 单
-          </li>
-        </ul>
+        <div class="status-bars">
+          <div v-for="(count, status) in statusBreakdown" :key="status" class="status-bar-row">
+            <div class="status-bar-label">
+              <span>{{ status }}</span>
+              <strong>{{ count }}</strong>
+            </div>
+            <div class="status-bar-track">
+              <i :style="{ width: `${Math.max(12, count * 18)}%` }"></i>
+            </div>
+          </div>
+        </div>
       </article>
 
-      <article class="panel">
+      <article class="panel ranking-panel">
         <div class="panel-title">
           <h2>高等待号码</h2>
+          <el-tag type="warning">需关注</el-tag>
         </div>
-        <ul class="rule-list">
-          <li v-for="item in topWaiters" :key="item.number">
-            {{ item.number }} · {{ item.status }} · {{ item.people_count }} 人
-          </li>
-        </ul>
+        <div class="rank-list">
+          <div v-for="item in topWaiters" :key="item.number" class="rank-row">
+            <div class="rank-num">{{ item.number }}</div>
+            <div class="rank-meta">
+              <strong>{{ item.status }}</strong>
+              <span>{{ item.people_count }} 人 · {{ item.remark || '无备注' }}</span>
+            </div>
+          </div>
+        </div>
       </article>
 
-      <article class="panel">
+      <article class="panel recent-panel">
+        <div class="panel-title">
+          <h2>最近号码</h2>
+          <el-tag type="info">最近 6 条</el-tag>
+        </div>
+        <div class="recent-list">
+          <div v-for="item in recentSessions" :key="item.number" class="recent-row">
+            <strong>{{ item.number }}</strong>
+            <span>{{ item.status }}</span>
+            <small>{{ item.people_count }} 人</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel note-panel">
         <div class="panel-title">
           <h2>口径说明</h2>
         </div>
