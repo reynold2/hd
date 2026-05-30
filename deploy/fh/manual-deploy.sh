@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_DIR="${APP_DIR:-/www/dk_project/wwwroot/fh}"
-REPO_URL="${REPO_URL:-git@github.com:reynold2/hd.git}"
+REPO_URL="${REPO_URL:-https://github.com/reynold2/hd.git}"
 BRANCH="${BRANCH:-main}"
 SERVICE_NAME="${SERVICE_NAME:-fh-queue.service}"
 BACKEND_PORT="${BACKEND_PORT:-8020}"
