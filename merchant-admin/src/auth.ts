@@ -85,6 +85,16 @@ export function logoutAdmin() {
   localStorage.removeItem(STORAGE_KEY)
 }
 
+export function adminLoginHref(base = import.meta.env?.BASE_URL || '') {
+  const normalizedBase = base ? base.replace(/\/?$/, '/') : '/'
+  return `${normalizedBase}login`
+}
+
+export function logoutAdminAndRedirect() {
+  logoutAdmin()
+  window.location.assign(adminLoginHref())
+}
+
 export function resolveHomePath(role: AdminRole) {
   return roleMeta[role].home
 }

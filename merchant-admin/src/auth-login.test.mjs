@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 
-import { loginAdmin, setAuthApiBaseForTests } from './auth.ts'
+import { adminLoginHref, loginAdmin, setAuthApiBaseForTests } from './auth.ts'
 
 const originalFetch = globalThis.fetch
 const originalLocalStorage = globalThis.localStorage
@@ -31,6 +31,12 @@ test('prefixes admin login requests when an API base is configured', async () =>
   assert.equal(calls[0].url, '/fh/api/admin/login')
   assert.equal(calls[0].options.method, 'POST')
   assert.deepEqual(JSON.parse(calls[0].options.body), { username: 'admin_platform', password: '123456' })
+})
+
+test('builds a base-aware admin login URL for deployed logout redirects', () => {
+  assert.equal(adminLoginHref('/fh/admin/'), '/fh/admin/login')
+  assert.equal(adminLoginHref('/fh/admin'), '/fh/admin/login')
+  assert.equal(adminLoginHref(''), '/login')
 })
 
 function okJson(payload) {

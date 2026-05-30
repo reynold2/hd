@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRoleMeta, getStoredProfile, logoutAdmin, type AuthProfile } from '../auth'
+import { getRoleMeta, getStoredProfile, logoutAdminAndRedirect, type AuthProfile } from '../auth'
 
 const router = useRouter()
 const profile = ref<AuthProfile | null>(null)
@@ -14,8 +14,7 @@ onMounted(() => {
 const meta = computed(() => (profile.value ? getRoleMeta(profile.value.role) : null))
 
 function handleLogout() {
-  logoutAdmin()
-  router.replace('/login')
+  logoutAdminAndRedirect()
 }
 </script>
 

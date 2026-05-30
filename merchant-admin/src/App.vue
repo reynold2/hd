@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import {
   DataLine,
   Dish,
@@ -14,10 +14,9 @@ import {
   Tickets,
   User
 } from '@element-plus/icons-vue'
-import { getStoredProfile, logoutAdmin } from './auth'
+import { getStoredProfile, logoutAdminAndRedirect } from './auth'
 
 const route = useRoute()
-const router = useRouter()
 const profile = computed(() => getStoredProfile())
 const showShell = computed(() => route.path !== '/login')
 
@@ -39,8 +38,7 @@ const navItems = [
 const activePath = computed(() => route.path)
 
 function handleLogout() {
-  logoutAdmin()
-  router.replace('/login')
+  logoutAdminAndRedirect()
 }
 </script>
 
@@ -70,7 +68,7 @@ function handleLogout() {
       <div class="store-card">
         <strong>{{ profile?.storeName || '川香麻辣烫（中山店）' }}</strong>
         <span>{{ profile?.displayName || '多角色操作台' }}</span>
-        <button @click="handleLogout">退出登录</button>
+        <button type="button" @click.prevent.stop="handleLogout">退出登录</button>
       </div>
     </aside>
 
