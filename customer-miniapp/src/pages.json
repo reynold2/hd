@@ -33,6 +33,14 @@
       }
     },
     {
+      "path": "pages/employee-register/index",
+      "style": {
+        "navigationBarTitleText": "员工注册",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#f7f8fb"
+      }
+    },
+    {
       "path": "pages/staff/index",
       "style": {
         "navigationBarTitleText": "服务员端",

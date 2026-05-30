@@ -15,6 +15,7 @@ export type LoginResponse = {
 }
 
 const STORAGE_KEY = 'queue-admin-auth'
+let testAuthApiBase: string | null = null
 
 const roleMeta: Record<AdminRole, { title: string; description: string; home: string }> = {
   platform_admin: {
@@ -39,12 +40,26 @@ const roleMeta: Record<AdminRole, { title: string; description: string; home: st
   }
 }
 
+function configuredAuthApiBase() {
+  if (testAuthApiBase !== null) return testAuthApiBase
+  return import.meta.env?.VITE_API_BASE || ''
+}
+
+function authApiUrl(path: string) {
+  const base = configuredAuthApiBase().replace(/\/$/, '')
+  return `${base}${path}`
+}
+
+export function setAuthApiBaseForTests(value: string) {
+  testAuthApiBase = value
+}
+
 export function getRoleMeta(role: AdminRole) {
   return roleMeta[role]
 }
 
 export async function loginAdmin(username: string, password: string): Promise<LoginResponse> {
-  const response = await fetch('/api/admin/login', {
+  const response = await fetch(authApiUrl('/api/admin/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })

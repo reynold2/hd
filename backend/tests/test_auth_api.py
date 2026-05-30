@@ -91,6 +91,29 @@ def test_wechat_login_returns_seeded_account_profile():
     assert payload["entry_page"] == "/pages/kitchen/index"
 
 
+def test_admin_login_returns_seeded_role_redirect():
+    response = client.post(
+        "/api/admin/login",
+        json={"username": "boss_store_001", "password": "123456"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["token"] == "token_boss_store_001"
+    assert payload["profile"]["role"] == "store_owner"
+    assert payload["profile"]["storeId"] == 1
+    assert payload["redirect"] == "/store"
+
+
+def test_admin_users_endpoint_exposes_test_role_accounts():
+    response = client.get("/api/admin/users")
+
+    assert response.status_code == 200
+    payload = response.json()
+    usernames = {user["username"] for user in payload}
+    assert {"admin_platform", "boss_store_001", "cashier_store_001", "screen_store_001"}.issubset(usernames)
+
+
 def test_protected_merchant_action_requires_login():
     response = client.post("/api/stores/1/queue/issue", json={"people_count": 2})
 

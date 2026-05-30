@@ -92,6 +92,11 @@ class LoginRequest(BaseModel):
     pin: str
 
 
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
 class WechatLoginRequest(BaseModel):
     openid: str
     store_id: int = Field(gt=0)
@@ -180,6 +185,36 @@ class LoginResponse(BaseModel):
     staff: StaffResponse
 
 
+class AdminProfileResponse(BaseModel):
+    username: str
+    displayName: str
+    role: str
+    storeId: Optional[int] = None
+    storeName: Optional[str] = None
+    avatarUrl: str = ""
+
+
+class AdminLoginResponse(BaseModel):
+    token: str
+    profile: AdminProfileResponse
+    redirect: str
+
+
+class AdminUserPayload(BaseModel):
+    username: str
+    display_name: str
+    password: str = "123456"
+    avatar_url: str = ""
+    role: str = "staff"
+    store_id: Optional[int] = None
+    openid: Optional[str] = None
+    status: str = "enabled"
+
+
+class AdminUserResponse(AdminUserPayload):
+    id: int
+
+
 class WechatRoleResponse(BaseModel):
     user_id: int
     display_name: str
@@ -225,6 +260,207 @@ def login(payload: LoginRequest, repository: AuthRepository = Depends(get_auth_r
         return repository.login(payload.store_id, payload.staff_name, payload.pin)
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
+
+
+ADMIN_ROLE_REDIRECTS = {
+    "platform_admin": "/platform",
+    "store_owner": "/store",
+    "cashier": "/cashier",
+    "screen": "/screen",
+}
+
+ADMIN_TEST_USERS = [
+    {
+        "id": 1,
+        "username": "admin_platform",
+        "display_name": "平台管理员",
+        "role": "platform_admin",
+        "scope": "platform",
+        "store_id": None,
+        "openid": None,
+        "password": "123456",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 2,
+        "username": "boss_store_001",
+        "display_name": "中山店老板",
+        "role": "store_owner",
+        "scope": "store",
+        "store_id": 1,
+        "openid": None,
+        "password": "123456",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 3,
+        "username": "cashier_store_001",
+        "display_name": "中山店收银",
+        "role": "cashier",
+        "scope": "store",
+        "store_id": 1,
+        "openid": None,
+        "password": "123456",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 4,
+        "username": "screen_store_001",
+        "display_name": "中山店大屏",
+        "role": "screen",
+        "scope": "store",
+        "store_id": 1,
+        "openid": None,
+        "password": "123456",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 5,
+        "username": "wx_customer_001",
+        "display_name": "顾客测试号",
+        "role": "customer",
+        "scope": "store",
+        "store_id": 1,
+        "openid": "openid_customer_001",
+        "password": "",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 6,
+        "username": "wx_boss_001",
+        "display_name": "小程序老板",
+        "role": "boss",
+        "scope": "store",
+        "store_id": 1,
+        "openid": "openid_boss_001",
+        "password": "",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 7,
+        "username": "wx_staff_001",
+        "display_name": "小程序服务员",
+        "role": "staff",
+        "scope": "store",
+        "store_id": 1,
+        "openid": "openid_staff_001",
+        "password": "",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 8,
+        "username": "wx_kitchen_001",
+        "display_name": "小程序制作",
+        "role": "kitchen",
+        "scope": "store",
+        "store_id": 1,
+        "openid": "openid_kitchen_001",
+        "password": "",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+    {
+        "id": 9,
+        "username": "wx_cashier_001",
+        "display_name": "小程序收银",
+        "role": "cashier",
+        "scope": "store",
+        "store_id": 1,
+        "openid": "openid_cashier_001",
+        "password": "",
+        "avatar_url": "",
+        "status": "enabled",
+    },
+]
+
+
+def admin_user_payload(user: dict) -> dict:
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "display_name": user["display_name"],
+        "password": user.get("password") or "",
+        "avatar_url": user.get("avatar_url") or "",
+        "role": user["role"],
+        "store_id": user.get("store_id"),
+        "openid": user.get("openid"),
+        "status": user.get("status", "enabled"),
+    }
+
+
+def next_admin_user_id() -> int:
+    return max((user["id"] for user in ADMIN_TEST_USERS), default=0) + 1
+
+
+@router.post("/api/admin/login", response_model=AdminLoginResponse)
+def admin_login(payload: AdminLoginRequest, catalog_repository: CatalogRepository = Depends(get_catalog_repository)):
+    user = next(
+        (
+            item
+            for item in ADMIN_TEST_USERS
+            if item["username"] == payload.username.strip() and item.get("password") == payload.password
+        ),
+        None,
+    )
+    if user is None:
+        raise HTTPException(status_code=401, detail="账号或密码错误")
+    store_name = None
+    if user.get("store_id"):
+        store_name = catalog_repository.get_catalog(user["store_id"])["store"]["name"]
+    return {
+        "token": f"token_{user['username']}",
+        "profile": {
+            "username": user["username"],
+            "displayName": user["display_name"],
+            "role": user["role"],
+            "storeId": user.get("store_id"),
+            "storeName": store_name,
+            "avatarUrl": user.get("avatar_url") or "",
+        },
+        "redirect": ADMIN_ROLE_REDIRECTS.get(user["role"], "/"),
+    }
+
+
+@router.get("/api/admin/users", response_model=List[AdminUserResponse])
+def list_admin_users():
+    return [admin_user_payload(user) for user in ADMIN_TEST_USERS]
+
+
+@router.post("/api/admin/users", response_model=AdminUserResponse, status_code=status.HTTP_201_CREATED)
+def create_admin_user(payload: AdminUserPayload):
+    if any(user["username"] == payload.username for user in ADMIN_TEST_USERS):
+        raise HTTPException(status_code=409, detail="账号已存在")
+    user = payload.dict()
+    user["id"] = next_admin_user_id()
+    user["scope"] = "store" if user.get("store_id") else "platform"
+    ADMIN_TEST_USERS.append(user)
+    return admin_user_payload(user)
+
+
+@router.patch("/api/admin/users/{user_id}", response_model=AdminUserResponse)
+def update_admin_user(user_id: int, payload: AdminUserPayload):
+    user = next((item for item in ADMIN_TEST_USERS if item["id"] == user_id), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    user.update(payload.dict())
+    user["scope"] = "store" if user.get("store_id") else "platform"
+    return admin_user_payload(user)
+
+
+@router.delete("/api/admin/users/{user_id}")
+def delete_admin_user(user_id: int):
+    index = next((idx for idx, item in enumerate(ADMIN_TEST_USERS) if item["id"] == user_id), None)
+    if index is None:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    ADMIN_TEST_USERS.pop(index)
+    return {"ok": True}
 
 
 @router.get("/api/roles/resolve", response_model=WechatRoleResponse)

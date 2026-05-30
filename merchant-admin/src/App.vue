@@ -18,6 +18,7 @@ import { getStoredProfile, logoutAdmin } from './auth'
 
 const route = useRoute()
 const profile = computed(() => getStoredProfile())
+const showShell = computed(() => route.path !== '/login')
 
 const navItems = [
   { label: '首页概览', path: '/', icon: House },
@@ -28,6 +29,7 @@ const navItems = [
   { label: '菜品管理', path: '/dishes', icon: Food },
   { label: '员工权限', path: '/staff', icon: User },
   { label: '平台审核', path: '/platform', icon: Grid },
+  { label: '用户管理', path: '/users', icon: User },
   { label: '大屏叫号', path: '/screen', icon: Monitor },
   { label: '数据统计', path: '/reports', icon: DataLine },
   { label: '系统设置', path: '/settings', icon: Setting }
@@ -42,7 +44,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div v-if="showShell" class="app-shell">
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">锅</div>
@@ -74,5 +76,9 @@ function handleLogout() {
     <main class="workspace">
       <RouterView />
     </main>
+  </div>
+
+  <div v-else class="login-shell">
+    <RouterView />
   </div>
 </template>

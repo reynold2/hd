@@ -1,23 +1,17 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { fetchMealSession, fetchStoreCatalog } from '../../api'
 import { normalizeQueueNumber, parseBindingParams, validateBoundSession } from '../../binding.mjs'
 
-const pageOptions = ref({})
 const store = ref(null)
 const selectedStoreId = ref(1)
 const bindNumberInput = ref('')
 const notice = ref('')
 const loading = ref(false)
 
-onLoad((options) => {
-  pageOptions.value = options || {}
-})
-
-onMounted(async () => {
-  const search = typeof window === 'undefined' ? '' : window.location.search
-  const binding = parseBindingParams(pageOptions.value, search)
+onLoad(async (options) => {
+  const binding = parseBindingParams(options || {})
   selectedStoreId.value = binding.storeId
   bindNumberInput.value = binding.number
   await loadStore()

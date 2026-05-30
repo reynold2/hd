@@ -34,6 +34,30 @@ export async function wechatLogin(payload) {
   return response.json()
 }
 
+export async function createEmployeeInvitation(storeId = 1, payload = {}) {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/employee-invitations`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    throw new Error('生成员工邀请失败')
+  }
+  return response.json()
+}
+
+export async function acceptEmployeeInvitation(token, payload) {
+  const response = await fetch(apiUrl(`/api/employee-invitations/${encodeURIComponent(token)}/accept`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    throw new Error('员工注册失败')
+  }
+  return response.json()
+}
+
 export async function fetchStoreCatalog(storeId = 1) {
   const response = await fetch(apiUrl(`/api/stores/${storeId}/catalog`))
   if (!response.ok) {

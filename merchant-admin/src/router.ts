@@ -7,6 +7,7 @@ import StoreView from './views/StoreView.vue'
 import ScreenView from './views/ScreenView.vue'
 import ReportsView from './views/ReportsView.vue'
 import PlatformView from './views/PlatformView.vue'
+import UserManagementView from './views/UserManagementView.vue'
 import LoginView from './views/LoginView.vue'
 import RoleHomeView from './views/RoleHomeView.vue'
 
@@ -115,6 +116,16 @@ export const routes: RouteRecordRaw[] = [
       title: '平台审核',
       crumb: '平台 / 审核',
       description: '审核商户入驻、门店资料和套餐权限'
+    } satisfies AdminRouteMeta
+  },
+  {
+    path: '/users',
+    name: 'users',
+    component: UserManagementView,
+    meta: {
+      title: '用户管理',
+      crumb: '平台 / 用户管理',
+      description: '管理员、老板与门店员工账号维护'
     } satisfies AdminRouteMeta
   },
   {
