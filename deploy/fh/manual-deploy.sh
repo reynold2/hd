@@ -116,8 +116,15 @@ build_frontends() {
 
 publish_static() {
   run mkdir -p "$ADMIN_ROOT" "$CUSTOMER_ROOT"
-  run rsync -a --delete "$APP_DIR/merchant-admin/dist/" "$ADMIN_ROOT/"
-  run rsync -a --delete "$APP_DIR/customer-miniapp/dist/build/h5/" "$CUSTOMER_ROOT/"
+  if command -v rsync >/dev/null 2>&1; then
+    run rsync -a --delete "$APP_DIR/merchant-admin/dist/" "$ADMIN_ROOT/"
+    run rsync -a --delete "$APP_DIR/customer-miniapp/dist/build/h5/" "$CUSTOMER_ROOT/"
+    return
+  fi
+  run find "$ADMIN_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  run find "$CUSTOMER_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  run cp -a "$APP_DIR/merchant-admin/dist/." "$ADMIN_ROOT/"
+  run cp -a "$APP_DIR/customer-miniapp/dist/build/h5/." "$CUSTOMER_ROOT/"
 }
 
 write_nginx_conf() {
