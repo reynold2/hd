@@ -71,6 +71,28 @@ test('posts real wechat login payload to backend auth endpoint', async () => {
   assert.deepEqual(JSON.parse(calls[0].options.body), { openid: 'openid_customer_001', store_id: 1 })
 })
 
+test('uses uni.request when fetch is unavailable in miniapp runtime', async () => {
+  const calls = []
+  globalThis.fetch = undefined
+  globalThis.uni = {
+    request(options) {
+      calls.push(options)
+      options.success({
+        statusCode: 200,
+        data: { openid: 'openid_staff_001', role: 'staff', store_id: 1 }
+      })
+    }
+  }
+  setApiBaseForTests('http://8.141.105.10/fh')
+
+  const payload = await wechatLogin({ openid: 'openid_staff_001', store_id: 1 })
+
+  assert.equal(payload.role, 'staff')
+  assert.equal(calls[0].url, 'http://8.141.105.10/fh/api/auth/wechat-login')
+  assert.equal(calls[0].method, 'POST')
+  assert.deepEqual(calls[0].data, { openid: 'openid_staff_001', store_id: 1 })
+})
+
 function okJson(payload) {
   return {
     ok: true,

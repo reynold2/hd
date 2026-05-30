@@ -16,6 +16,9 @@ def test_fh_manual_deploy_script_contains_git_pull_and_isolated_paths():
     assert "VITE_API_BASE=\"/fh\"" in content
     assert "npm run build -- --base=/fh/admin/" in content
     assert "npm run build:h5 -- --base=/fh/customer/" in content
+    assert "MINIAPP_API_BASE=\"${MINIAPP_API_BASE:-http://8.141.105.10/fh}\"" in content
+    assert "npm run build:mp-weixin" in content
+    assert "grep -R \"127\\.0\\.0\\.1\\|localhost\\|VITE_API_BASE\\|/fh/api\"" in content
     assert "command -v rsync" in content
     assert "cp -a \"$APP_DIR/merchant-admin/dist/.\" \"$ADMIN_ROOT/\"" in content
     assert "SERVICE_NAME=\"${SERVICE_NAME:-fh-queue.service}\"" in content

@@ -13,6 +13,7 @@ CUSTOMER_ROOT="${CUSTOMER_ROOT:-/www/wwwroot/fh/customer}"
 DATA_DIR="${DATA_DIR:-/www/dk_project/wwwroot/fh/data}"
 DATABASE_URL="${DATABASE_URL:-sqlite:////www/dk_project/wwwroot/fh/data/queue_calling.db}"
 VITE_API_BASE="/fh"
+MINIAPP_API_BASE="${MINIAPP_API_BASE:-http://8.141.105.10/fh}"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -112,6 +113,13 @@ build_frontends() {
   run npm ci
   log "VITE_API_BASE=/fh npm run build:h5 -- --base=/fh/customer/"
   VITE_API_BASE="/fh" npm run build:h5 -- --base=/fh/customer/
+  log "VITE_API_BASE=${MINIAPP_API_BASE} npm run build:mp-weixin"
+  VITE_API_BASE="$MINIAPP_API_BASE" npm run build:mp-weixin
+  if grep -R "127\.0\.0\.1\|localhost\|VITE_API_BASE\|/fh/api" -n dist/build/mp-weixin >/tmp/fh-miniapp-bad-url.txt 2>/dev/null; then
+    cat /tmp/fh-miniapp-bad-url.txt >&2
+    printf 'Miniapp build still contains local, env placeholder, or relative /fh API URLs.\n' >&2
+    exit 1
+  fi
 }
 
 publish_static() {
@@ -177,7 +185,12 @@ verify_public() {
   run curl -fsS "http://8.141.105.10/fh/health"
   run curl -fsSI "http://8.141.105.10/fh/admin/"
   run curl -fsSI "http://8.141.105.10/fh/customer/"
+  if [[ ! -f "$APP_DIR/customer-miniapp/dist/build/mp-weixin/app.js" ]]; then
+    printf 'Miniapp build artifact is missing: %s\n' "$APP_DIR/customer-miniapp/dist/build/mp-weixin/app.js" >&2
+    exit 1
+  fi
   log "Manual deploy finished: http://8.141.105.10/fh/admin/ and http://8.141.105.10/fh/customer/"
+  log "WeChat miniapp artifact: ${APP_DIR}/customer-miniapp/dist/build/mp-weixin"
 }
 
 main() {

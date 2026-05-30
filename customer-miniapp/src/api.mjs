@@ -10,124 +10,124 @@ function apiUrl(path) {
   return `${base}${path}`
 }
 
+async function requestJson(path, options = {}) {
+  const url = apiUrl(path)
+  const uniApi = typeof uni !== 'undefined' ? uni : globalThis.uni
+  if (uniApi?.request) {
+    return new Promise((resolve, reject) => {
+      uniApi.request({
+        url,
+        method: options.method || 'GET',
+        header: options.headers,
+        data: options.body ? JSON.parse(options.body) : undefined,
+        success(response) {
+          const statusCode = response.statusCode || 0
+          if (statusCode < 200 || statusCode >= 300) {
+            reject(new Error(options.errorMessage || '请求失败'))
+            return
+          }
+          resolve(response.data)
+        },
+        fail() {
+          reject(new Error(options.errorMessage || '请求失败'))
+        }
+      })
+    })
+  }
+  if (typeof fetch === 'function') {
+    const response = await fetch(url, options)
+    if (!response.ok) {
+      throw new Error(options.errorMessage || '请求失败')
+    }
+    return response.json()
+  }
+  throw new Error(options.errorMessage || '请求失败')
+}
+
 export function setApiBaseForTests(value) {
   testApiBase = value
 }
 
 export async function resolveRoleByOpenid(openid, storeId = 1) {
-  const response = await fetch(apiUrl(`/api/roles/resolve?openid=${encodeURIComponent(openid)}&store_id=${storeId}`))
-  if (!response.ok) {
-    throw new Error('角色解析失败')
-  }
-  return response.json()
+  return requestJson(`/api/roles/resolve?openid=${encodeURIComponent(openid)}&store_id=${storeId}`, {
+    errorMessage: '角色解析失败'
+  })
 }
 
 export async function wechatLogin(payload) {
-  const response = await fetch(apiUrl('/api/auth/wechat-login'), {
+  return requestJson('/api/auth/wechat-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '微信登录失败'
   })
-  if (!response.ok) {
-    throw new Error('微信登录失败')
-  }
-  return response.json()
 }
 
 export async function createEmployeeInvitation(storeId = 1, payload = {}) {
-  const response = await fetch(apiUrl(`/api/stores/${storeId}/employee-invitations`), {
+  return requestJson(`/api/stores/${storeId}/employee-invitations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '生成员工邀请失败'
   })
-  if (!response.ok) {
-    throw new Error('生成员工邀请失败')
-  }
-  return response.json()
 }
 
 export async function acceptEmployeeInvitation(token, payload) {
-  const response = await fetch(apiUrl(`/api/employee-invitations/${encodeURIComponent(token)}/accept`), {
+  return requestJson(`/api/employee-invitations/${encodeURIComponent(token)}/accept`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '员工注册失败'
   })
-  if (!response.ok) {
-    throw new Error('员工注册失败')
-  }
-  return response.json()
 }
 
 export async function fetchStoreCatalog(storeId = 1) {
-  const response = await fetch(apiUrl(`/api/stores/${storeId}/catalog`))
-  if (!response.ok) {
-    throw new Error('门店信息加载失败')
-  }
-  return response.json()
+  return requestJson(`/api/stores/${storeId}/catalog`, { errorMessage: '门店信息加载失败' })
 }
 
 export async function fetchMealSession(number) {
-  const response = await fetch(apiUrl(`/api/meal-sessions/${number}`))
-  if (!response.ok) {
-    throw new Error('号码信息加载失败')
-  }
-  return response.json()
+  return requestJson(`/api/meal-sessions/${number}`, { errorMessage: '号码信息加载失败' })
 }
 
 export async function issueQueueNumber(storeId = 1, payload = { people_count: 2, remark: '' }) {
-  const response = await fetch(apiUrl(`/api/stores/${storeId}/queue/issue`), {
+  return requestJson(`/api/stores/${storeId}/queue/issue`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '取号失败'
   })
-  if (!response.ok) {
-    throw new Error('取号失败')
-  }
-  return response.json()
 }
 
 export async function addSessionItem(number, item) {
-  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/items`), {
+  return requestJson(`/api/meal-sessions/${number}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
+    body: JSON.stringify(item),
+    errorMessage: '追加失败，请稍后再试'
   })
-  if (!response.ok) {
-    throw new Error('追加失败，请稍后再试')
-  }
-  return response.json()
 }
 
 export async function appendSessionRemark(number, payload) {
-  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/remarks`), {
+  return requestJson(`/api/meal-sessions/${number}/remarks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '备注提交失败'
   })
-  if (!response.ok) {
-    throw new Error('备注提交失败')
-  }
-  return response.json()
 }
 
 export async function createServiceCall(number, payload) {
-  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/service-calls`), {
+  return requestJson(`/api/meal-sessions/${number}/service-calls`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    errorMessage: '呼叫服务失败'
   })
-  if (!response.ok) {
-    throw new Error('呼叫服务失败')
-  }
-  return response.json()
 }
 
 export async function requestCheckout(number) {
-  const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/request-checkout`), {
-    method: 'POST'
+  return requestJson(`/api/meal-sessions/${number}/actions/request-checkout`, {
+    method: 'POST',
+    errorMessage: '呼叫结账失败'
   })
-  if (!response.ok) {
-    throw new Error('呼叫结账失败')
-  }
-  return response.json()
 }
