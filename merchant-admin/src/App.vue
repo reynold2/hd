@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   DataLine,
   Dish,
@@ -17,6 +17,7 @@ import {
 import { getStoredProfile, logoutAdmin } from './auth'
 
 const route = useRoute()
+const router = useRouter()
 const profile = computed(() => getStoredProfile())
 const showShell = computed(() => route.path !== '/login')
 
@@ -39,7 +40,7 @@ const activePath = computed(() => route.path)
 
 function handleLogout() {
   logoutAdmin()
-  window.location.href = '/login'
+  router.replace('/login')
 }
 </script>
 

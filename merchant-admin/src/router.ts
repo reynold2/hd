@@ -10,6 +10,7 @@ import PlatformView from './views/PlatformView.vue'
 import UserManagementView from './views/UserManagementView.vue'
 import LoginView from './views/LoginView.vue'
 import RoleHomeView from './views/RoleHomeView.vue'
+import { resolveAuthRedirect } from './router-auth'
 
 export type AdminRouteMeta = {
   title: string
@@ -166,8 +167,5 @@ export const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (to.path !== '/login' && to.path !== '/home' && !localStorage.getItem('queue-admin-auth')) {
-    return '/login'
-  }
-  return true
+  return resolveAuthRedirect(to.path, Boolean(localStorage.getItem('queue-admin-auth')))
 })
