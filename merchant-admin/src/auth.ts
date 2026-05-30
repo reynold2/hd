@@ -47,6 +47,9 @@ function configuredAuthApiBase() {
 
 function authApiUrl(path: string) {
   const base = configuredAuthApiBase().replace(/\/$/, '')
+  if (base === '/api' && path.startsWith('/api/')) {
+    return path
+  }
   return `${base}${path}`
 }
 

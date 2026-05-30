@@ -33,6 +33,24 @@ test('prefixes admin login requests when an API base is configured', async () =>
   assert.deepEqual(JSON.parse(calls[0].options.body), { username: 'admin_platform', password: '123456' })
 })
 
+test('does not duplicate /api for domain-root admin login requests', async () => {
+  setAuthApiBaseForTests('/api')
+  const calls = []
+  globalThis.localStorage = { setItem() {} }
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({
+      token: 'token_boss_store_001',
+      profile: { username: 'boss_store_001', displayName: '中山店老板', role: 'store_owner' },
+      redirect: '/store'
+    })
+  }
+
+  await loginAdmin('boss_store_001', '123456')
+
+  assert.equal(calls[0].url, '/api/admin/login')
+})
+
 test('builds a base-aware admin login URL for deployed logout redirects', () => {
   assert.equal(adminLoginHref('/fh/admin/'), '/fh/admin/login')
   assert.equal(adminLoginHref('/fh/admin'), '/fh/admin/login')

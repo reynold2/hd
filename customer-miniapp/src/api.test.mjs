@@ -56,6 +56,19 @@ test('prefixes customer API requests when an API base is configured', async () =
   assert.equal(calls[0].url, '/fh/api/meal-sessions/A003/actions/request-checkout')
 })
 
+test('does not duplicate /api when H5 is deployed at the domain root', async () => {
+  setApiBaseForTests('/api')
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ ok: true })
+  }
+
+  await requestCheckout('A004')
+
+  assert.equal(calls[0].url, '/api/meal-sessions/A004/actions/request-checkout')
+})
+
 test('posts real wechat login payload to backend auth endpoint', async () => {
   const calls = []
   globalThis.fetch = async (url, options = {}) => {

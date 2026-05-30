@@ -59,8 +59,8 @@ The script will:
 2. Install backend dependencies in `/www/dk_project/wwwroot/hd/backend/.venv`.
 3. Run Alembic migrations against the isolated SQLite database.
 4. Install and restart `hd-queue.service`.
-5. Build merchant admin with `VITE_API_BASE=/api` and base `/admin/`.
-6. Build customer H5 with `VITE_API_BASE=/api` and base `/customer/`.
+5. Build merchant admin with same-origin API requests and base `/admin/`.
+6. Build customer H5 with same-origin API requests and base `/customer/`.
 7. Build WeChat miniapp with `VITE_API_BASE=https://hd.yxck3d.tech` by default. Use `SKIP_MINIAPP_BUILD=1` only when you intentionally want to skip generating the upload artifact.
 8. Ensure an isolated origin certificate exists under `/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech`.
 9. Copy `deploy/hd/nginx-hd.yxck3d.tech.conf` into the Nginx vhost directory.

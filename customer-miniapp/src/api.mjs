@@ -7,6 +7,9 @@ function configuredApiBase() {
 
 function apiUrl(path) {
   const base = configuredApiBase().replace(/\/$/, '')
+  if (base === '/api' && path.startsWith('/api/')) {
+    return path
+  }
   return `${base}${path}`
 }
 

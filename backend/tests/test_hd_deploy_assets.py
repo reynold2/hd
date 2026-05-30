@@ -13,6 +13,7 @@ def test_hd_deploy_script_uses_isolated_defaults():
     assert 'REPO_URL="${REPO_URL:-https://github.com/reynold2/hd.git}"' in content
     assert 'SERVICE_NAME="${SERVICE_NAME:-hd-queue.service}"' in content
     assert 'DOMAIN="${DOMAIN:-hd.yxck3d.tech}"' in content
+    assert 'API_BASE="${API_BASE:-}"' in content
     assert 'BACKEND_PORT="${BACKEND_PORT:-8020}"' in content
     assert "ensure_origin_cert" in content
     assert "/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech" in content

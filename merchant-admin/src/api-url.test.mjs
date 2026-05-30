@@ -16,3 +16,9 @@ test('prefixes merchant API requests when an API base is configured', () => {
 
   assert.equal(apiUrl('/api/stores/1/catalog'), '/fh/api/stores/1/catalog')
 })
+
+test('does not duplicate /api when deployed at the domain root', () => {
+  setApiBaseForTests('/api')
+
+  assert.equal(apiUrl('/api/stores/1/catalog'), '/api/stores/1/catalog')
+})
