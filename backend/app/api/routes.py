@@ -401,11 +401,12 @@ def next_admin_user_id() -> int:
 
 @router.post("/api/admin/login", response_model=AdminLoginResponse)
 def admin_login(payload: AdminLoginRequest, catalog_repository: CatalogRepository = Depends(get_catalog_repository)):
+    password = payload.password.strip()
     user = next(
         (
             item
             for item in ADMIN_TEST_USERS
-            if item["username"] == payload.username.strip() and item.get("password") == payload.password
+            if item["username"] == payload.username.strip() and item.get("password") == password
         ),
         None,
     )

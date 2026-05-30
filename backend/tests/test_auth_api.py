@@ -105,6 +105,36 @@ def test_admin_login_returns_seeded_role_redirect():
     assert payload["redirect"] == "/store"
 
 
+def test_all_admin_test_accounts_accept_default_password():
+    expected_redirects = {
+        "admin_platform": "/platform",
+        "boss_store_001": "/store",
+        "cashier_store_001": "/cashier",
+        "screen_store_001": "/screen",
+    }
+
+    for username, redirect in expected_redirects.items():
+        response = client.post(
+            "/api/admin/login",
+            json={"username": username, "password": "123456"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["profile"]["username"] == username
+        assert payload["redirect"] == redirect
+
+
+def test_admin_login_ignores_accidental_password_whitespace():
+    response = client.post(
+        "/api/admin/login",
+        json={"username": "boss_store_001", "password": " 123456 "},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["token"] == "token_boss_store_001"
+
+
 def test_admin_users_endpoint_exposes_test_role_accounts():
     response = client.get("/api/admin/users")
 

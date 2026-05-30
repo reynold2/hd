@@ -18,7 +18,7 @@ BUILD_SWAP_FILE="${BUILD_SWAP_FILE:-/www/swap-codex-build-hd}"
 BUILD_SWAP_SIZE="${BUILD_SWAP_SIZE:-2G}"
 NODE_OPTIONS_BUILD="${NODE_OPTIONS_BUILD:---max-old-space-size=1024}"
 SKIP_CUSTOMER_H5_BUILD="${SKIP_CUSTOMER_H5_BUILD:-0}"
-SKIP_MINIAPP_BUILD="${SKIP_MINIAPP_BUILD:-1}"
+SKIP_MINIAPP_BUILD="${SKIP_MINIAPP_BUILD:-0}"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -197,9 +197,13 @@ build_miniapp() {
   run npm ci
   log "npm run build:mp-weixin (VITE_API_BASE=https://${DOMAIN})"
   VITE_API_BASE="https://${DOMAIN}" npm run build:mp-weixin
-  if grep -R "127\.0\.0\.1\|localhost\|/fh/api\|/fh/" -n dist/build/mp-weixin src >/tmp/hd-miniapp-local-url.txt 2>/dev/null; then
+  if grep -R "127\.0\.0\.1\|localhost\|/fh/api\|/fh/" -n dist/build/mp-weixin >/tmp/hd-miniapp-local-url.txt 2>/dev/null; then
     cat /tmp/hd-miniapp-local-url.txt >&2
     printf 'Miniapp build still contains local or old /fh URLs.\n' >&2
+    exit 1
+  fi
+  if [[ ! -f "dist/build/mp-weixin/app.js" ]]; then
+    printf 'Miniapp build artifact is missing: %s\n' "$APP_DIR/customer-miniapp/dist/build/mp-weixin/app.js" >&2
     exit 1
   fi
 }
