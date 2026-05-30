@@ -9,7 +9,7 @@ Production server:
 The deployment is isolated from the existing `yuyue-saas` service:
 
 - Backend service: `fh-queue.service`
-- Backend port: `127.0.0.1:8020`
+- Backend port: `127.0.0.1:8021`
 - Backend path: `/www/dk_project/wwwroot/fh/backend`
 - SQLite data path: `/www/dk_project/wwwroot/fh/data/queue_calling.db`
 - Merchant admin static path: `/www/wwwroot/fh/admin`
@@ -40,7 +40,7 @@ Service checks:
 
 ```bash
 systemctl status fh-queue.service --no-pager -l
-curl -i http://127.0.0.1:8020/health
+curl -i http://127.0.0.1:8021/health
 curl -i -H 'Host: 8.141.105.10' http://127.0.0.1/fh/health
 ```
 

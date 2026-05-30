@@ -19,6 +19,6 @@ def test_fh_manual_deploy_script_contains_git_pull_and_isolated_paths():
     assert "command -v rsync" in content
     assert "cp -a \"$APP_DIR/merchant-admin/dist/.\" \"$ADMIN_ROOT/\"" in content
     assert "SERVICE_NAME=\"${SERVICE_NAME:-fh-queue.service}\"" in content
-    assert "BACKEND_PORT=\"${BACKEND_PORT:-8020}\"" in content
+    assert "BACKEND_PORT=\"${BACKEND_PORT:-8021}\"" in content
     assert "/www/dk_project/wwwroot/yuyue-saas" not in content
     assert "yuyue-saas.service" not in content
