@@ -7,7 +7,10 @@
       "business_status": "open",
       "business_hours": "10:00-22:30",
       "address": "中山市东区中山三路88号",
-      "avg_prepare_minutes": 20
+      "avg_prepare_minutes": 20,
+      "payment_qr": "川香麻辣烫（中山店）微信收款码",
+      "wechat_payment_qr_url": "/static/payment-qrs/store-1-wechat-pay.jpg",
+      "wechat_payment_qr_name": "川香麻辣烫（中山店）微信收款码"
     }
   ],
   "users": [

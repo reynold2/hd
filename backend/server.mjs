@@ -294,6 +294,18 @@ const server = createServer(async (req, res) => {
     })
   }
 
+  const paymentQrMatch = url.pathname.match(/^\/api\/stores\/(\d+)\/payment-qr$/)
+  if (req.method === 'PATCH' && paymentQrMatch) {
+    const body = await readBody(req)
+    const store = getStore(paymentQrMatch[1])
+    if (!store) return writeJson(res, 404, { message: '门店不存在' })
+    store.wechat_payment_qr_url = body.wechat_payment_qr_url || store.wechat_payment_qr_url || ''
+    store.wechat_payment_qr_name = body.wechat_payment_qr_name || store.wechat_payment_qr_name || '微信收款码'
+    store.payment_qr = store.wechat_payment_qr_name
+    persist()
+    return writeJson(res, 200, store)
+  }
+
   const queueMatch = url.pathname.match(/^\/api\/stores\/(\d+)\/queue$/)
   if (req.method === 'GET' && queueMatch) {
     return writeJson(res, 200, getMeals(queueMatch[1]))
