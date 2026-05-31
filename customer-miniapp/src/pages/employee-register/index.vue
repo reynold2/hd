@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { wechatLogin } from '../../api.mjs'
 
 const storeName = ref('川香麻辣烫（中山店）')
-const selectedRole = ref('服务员')
+const selectedRole = ref('店员')
 const account = ref('')
 const password = ref('123456')
 const avatar = ref('默认头像')
@@ -13,7 +13,7 @@ const submitting = ref(false)
 const inviteToken = ref('')
 const isDuplicateAccount = ref(false)
 
-const roleOptions = ['服务员', '制作', '收银']
+const roleOptions = ['店员', '制作']
 
 const canSubmit = computed(() => account.value.trim().length > 0 && password.value.trim().length >= 6)
 
@@ -53,30 +53,28 @@ async function submitRegister() {
 </script>
 
 <template>
-  <view class="page role-page">
-    <view class="hero">
-      <view>
-        <text class="store-name">员工扫码注册</text>
-        <view class="store-meta">
-          <text>{{ storeName }}</text>
-          <text>选择角色</text>
-          <text>绑定门店</text>
-        </view>
+  <view class="page app-page role-page register-home">
+    <view class="app-hero green-hero">
+      <view class="hero-copy">
+        <text class="eyebrow">员工扫码注册</text>
+        <text class="store-name">{{ storeName }}</text>
+        <text class="hero-subtitle">选择岗位，填写账号后绑定当前门店</text>
       </view>
+      <view class="hero-orb">员</view>
     </view>
 
     <view v-if="notice" class="api-notice">{{ notice }}</view>
 
-    <view class="card">
+    <view class="card feature-card">
       <view class="section-title">
-        <text>门店内角色</text>
-        <text>扫码后选择</text>
+        <text>选择角色</text>
+        <text>{{ selectedRole }}</text>
       </view>
       <view class="role-grid compact-role-grid">
         <view
           v-for="role in roleOptions"
           :key="role"
-          class="role-card"
+          class="role-card glass-role-card"
           :class="{ active: selectedRole === role }"
           @click="selectedRole = role"
         >
@@ -86,12 +84,12 @@ async function submitRegister() {
       </view>
     </view>
 
-    <view class="card">
+    <view class="card form-card">
       <view class="section-title">
         <text>账号信息</text>
         <text>默认值可直接使用</text>
       </view>
-      <view class="bind-card register-card">
+      <view class="form-stack">
         <input v-model="account" placeholder="账号，未注册可创建" />
         <input v-model="password" placeholder="密码，默认 123456" password />
         <input v-model="avatar" placeholder="头像说明 / 地址" />
@@ -106,8 +104,10 @@ async function submitRegister() {
         <text>注册状态</text>
         <text>{{ registered ? '已完成' : '待提交' }}</text>
       </view>
-      <view class="notice-box">
-        <text>账号存在时将提示已注册；账号不存在时创建账号并关联当前门店与角色。</text>
+      <view class="item-cloud">
+        <text>账号存在则提示已注册</text>
+        <text>新账号自动关联门店</text>
+        <text>店员统一处理服务和收款</text>
       </view>
     </view>
   </view>

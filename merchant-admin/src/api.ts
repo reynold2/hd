@@ -26,6 +26,9 @@ export type StoreCatalog = {
     address: string
     avg_prepare_minutes: number
     queue_prefix: string
+    payment_qr?: string
+    wechat_payment_qr_url?: string
+    wechat_payment_qr_name?: string
   }
   dishes: Array<{ id: number; name: string; category: string; price: string; available: boolean }>
   staff: Array<{ id: number; name: string; role: string; status: string }>
@@ -86,7 +89,13 @@ type CreateDishPayload = {
 
 type UpdateDishPayload = Partial<CreateDishPayload>
 
+type UpdateWechatPaymentQrPayload = {
+  wechat_payment_qr_url: string
+  wechat_payment_qr_name?: string
+}
+
 let testApiBase: string | null = null
+const ADMIN_TOKEN_KEY = 'queue-admin-auth-token'
 
 function configuredApiBase() {
   if (testApiBase !== null) return testApiBase
@@ -103,6 +112,15 @@ export function apiUrl(path: string) {
 
 export function setApiBaseForTests(value: string) {
   testApiBase = value
+}
+
+function authHeaders(headers: Record<string, string> = {}) {
+  try {
+    const token = globalThis.localStorage?.getItem?.(ADMIN_TOKEN_KEY)
+    return token ? { ...headers, Authorization: `Bearer ${token}` } : headers
+  } catch {
+    return headers
+  }
 }
 
 export async function fetchAdminUsers(): Promise<AdminUser[]> {
@@ -212,7 +230,7 @@ export async function fetchMealSession(number: string): Promise<MealSession> {
 export async function issueQueueNumber(storeId = 1, payload: IssueQueuePayload = { people_count: 2, remark: '' }) {
   const response = await fetch(apiUrl(`/api/stores/${storeId}/queue/issue`), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   })
   if (!response.ok) {
@@ -269,7 +287,8 @@ export async function requestCheckout(number: string) {
 
 export async function runSessionAction(number: string, action: SessionAction): Promise<MealSession> {
   const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/${action}`), {
-    method: 'POST'
+    method: 'POST',
+    headers: authHeaders()
   })
   if (!response.ok) {
     throw new Error('号码状态推进失败')
@@ -280,7 +299,7 @@ export async function runSessionAction(number: string, action: SessionAction): P
 export async function confirmPayment(number: string, cashierId: number, paymentMethod = 'store_qr'): Promise<MealSession> {
   const response = await fetch(apiUrl(`/api/meal-sessions/${number}/actions/confirm-payment`), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ payment_method: paymentMethod, cashier_id: cashierId })
   })
   if (!response.ok) {
@@ -289,10 +308,22 @@ export async function confirmPayment(number: string, cashierId: number, paymentM
   return response.json()
 }
 
+export async function updateWechatPaymentQr(storeId: number, payload: UpdateWechatPaymentQrPayload) {
+  const response = await fetch(apiUrl(`/api/stores/${storeId}/payment-qr`), {
+    method: 'PATCH',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    throw new Error('收款码保存失败')
+  }
+  return response.json()
+}
+
 export async function createDish(storeId: number, payload: CreateDishPayload) {
   const response = await fetch(apiUrl(`/api/stores/${storeId}/dishes`), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   })
   if (!response.ok) {
@@ -304,7 +335,7 @@ export async function createDish(storeId: number, payload: CreateDishPayload) {
 export async function updateDish(dishId: number, payload: UpdateDishPayload) {
   const response = await fetch(apiUrl(`/api/dishes/${dishId}`), {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   })
   if (!response.ok) {

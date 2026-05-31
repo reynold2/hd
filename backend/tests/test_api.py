@@ -62,6 +62,13 @@ def auth_header(staff_name: str, store_id: int = 1) -> dict:
     return {"Authorization": f"Bearer {response.json()['token']}"}
 
 
+def wechat_auth_header(openid: str, store_id: int = 1) -> dict:
+    client.get(f"/api/stores/{store_id}/catalog")
+    response = client.post("/api/auth/wechat-login", json={"openid": openid, "store_id": store_id})
+    assert response.status_code == 200
+    return {"Authorization": f"Bearer {response.json()['token']}"}
+
+
 def test_health_route_returns_ok():
     response = client.get("/health")
 
@@ -188,6 +195,32 @@ def test_customer_add_item_and_cashier_complete_releases_number():
 
     active = client.get("/api/stores/1/queue").json()
     assert active == []
+
+
+def test_staff_can_confirm_payment_and_complete_session_from_miniapp_workbench():
+    issued = client.post(
+        "/api/stores/1/queue/issue",
+        json={"people_count": 2, "remark": "现场登记"},
+        headers=wechat_auth_header("openid_staff_001"),
+    )
+    assert issued.status_code == 201
+    client.post(
+        "/api/meal-sessions/A001/items",
+        json={"name": "酸梅汤", "amount": "8.00", "source": "staff", "quantity": 1},
+    )
+    client.post("/api/meal-sessions/A001/actions/request-checkout")
+
+    paid = client.post(
+        "/api/meal-sessions/A001/actions/confirm-payment",
+        json={"payment_method": "store_qr", "cashier_id": 7},
+        headers=wechat_auth_header("openid_staff_001"),
+    )
+    completed = client.post("/api/meal-sessions/A001/actions/complete", headers=wechat_auth_header("openid_staff_001"))
+
+    assert paid.status_code == 200
+    assert paid.json()["status"] == "paid"
+    assert completed.status_code == 200
+    assert completed.json()["status"] == "completed"
 
 
 def test_customer_can_append_remark_and_call_service_until_payment():

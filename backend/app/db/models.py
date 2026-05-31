@@ -81,6 +81,9 @@ class StoreModel(Base):
     address: Mapped[str] = mapped_column(String(255), default="")
     queue_prefix: Mapped[str] = mapped_column(String(8), default="A")
     avg_prepare_minutes: Mapped[int] = mapped_column(Integer, default=18)
+    payment_qr: Mapped[str] = mapped_column(String(255), default="微信收款码")
+    wechat_payment_qr_url: Mapped[str] = mapped_column(String(500), default="")
+    wechat_payment_qr_name: Mapped[str] = mapped_column(String(120), default="")
 
     dishes: Mapped[List["DishModel"]] = relationship(
         back_populates="store",

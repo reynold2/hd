@@ -23,9 +23,19 @@ test('builds staff role URL with default store only', () => {
   assert.equal(url, '/pages/kitchen/index?store_id=1')
 })
 
-test('falls back to local role entry when backend omits entry page', () => {
+test('cashier role falls back to the merged staff workbench', () => {
   const role = getRoleEntry('cashier')
   const url = buildRoleEntryUrl({ role: role.code, store_id: 1 })
 
-  assert.equal(url, '/pages/cashier/index?store_id=1')
+  assert.equal(url, '/pages/staff/index?store_id=1')
+})
+
+test('cashier backend entry page is normalized to the merged staff workbench', () => {
+  const url = buildRoleEntryUrl({
+    role: 'cashier',
+    entry_page: '/pages/cashier/index',
+    store_id: 1
+  })
+
+  assert.equal(url, '/pages/staff/index?store_id=1')
 })

@@ -77,6 +77,11 @@ const stats = computed(() => [
   { label: '记账金额', value: `¥${cashierPending.value.reduce((sum, row) => sum + Number(row.total_amount || 0), 0).toFixed(2)}`, unit: '', color: 'red', icon: Money }
 ])
 
+const paymentQrUrl = computed(() => catalog.value?.store.wechat_payment_qr_url || '')
+const paymentQrName = computed(() =>
+  catalog.value?.store.wechat_payment_qr_name || catalog.value?.store.payment_qr || '请老板先配置微信收款码'
+)
+
 onMounted(loadDashboard)
 
 async function loadDashboard() {
@@ -369,7 +374,8 @@ const logs = [
             <strong>{{ cashierPending[0]?.number || '暂无' }}</strong>
             <p>{{ cashierPending[0] ? `应收 ¥${cashierPending[0].total_amount}` : '没有待结账号码' }}</p>
           </div>
-          <div class="qr-box">收款码</div>
+          <img v-if="paymentQrUrl" class="qr-box qr-image" :src="paymentQrUrl" :alt="paymentQrName" />
+          <div v-else class="qr-box">{{ paymentQrName }}</div>
           <el-button type="primary" :icon="Check" :disabled="!cashierPending[0]" @click="cashierPending[0] && receivePayment(rowFromSession(cashierPending[0]))">确认已收到</el-button>
         </div>
       </article>

@@ -11,8 +11,7 @@ const roleOpenids = {
   customer: 'openid_customer_001',
   boss: 'openid_boss_001',
   staff: 'openid_staff_001',
-  kitchen: 'openid_kitchen_001',
-  cashier: 'openid_cashier_001'
+  kitchen: 'openid_kitchen_001'
 }
 
 onMounted(async () => {
@@ -42,36 +41,34 @@ async function enterAs(role) {
 </script>
 
 <template>
-  <view class="page test-home-page">
-    <view class="hero test-hero">
-      <view>
+  <view class="page app-page test-home-page">
+    <view class="app-hero green-hero">
+      <view class="hero-copy">
+        <text class="eyebrow">测试用户入口</text>
         <text class="store-name">{{ store?.name || '默认门店' }}</text>
-        <view class="store-meta">
-          <text>模拟扫码进入</text>
-          <text>门店 #1</text>
-          <text>{{ store?.business_hours || '读取真实门店中' }}</text>
-        </view>
+        <text class="hero-subtitle">点击角色后走真实登录流程，进入对应小程序页面</text>
       </view>
+      <view class="hero-orb">测</view>
     </view>
 
     <view v-if="notice" class="api-notice">{{ notice }}</view>
 
-    <view class="card">
+    <view class="card feature-card">
       <view class="section-title">
         <text>选择测试账号</text>
-        <text>点击后走真实登录</text>
+        <text>门店 #1 · {{ store?.business_hours || '读取中' }}</text>
       </view>
-      <view class="role-grid">
+      <view class="prototype-grid">
         <button
           v-for="role in miniRoles"
           :key="role.code"
-          class="role-card"
+          class="prototype-tile"
           :disabled="loadingRole === role.code"
           @click="enterAs(role)"
         >
-          <text class="role-label">{{ role.label }}</text>
-          <text class="role-desc">{{ role.description }}</text>
-          <text class="role-meta">{{ roleOpenids[role.code] }}</text>
+          <text class="tile-icon">{{ role.label.slice(0, 1) }}</text>
+          <text class="tile-title">{{ role.label }}</text>
+          <text class="tile-desc">{{ role.description }}</text>
         </button>
       </view>
     </view>

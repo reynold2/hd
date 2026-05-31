@@ -89,6 +89,25 @@ def test_wechat_login_returns_seeded_account_profile():
     assert payload["store_id"] == 1
     assert payload["store"]["id"] == 1
     assert payload["entry_page"] == "/pages/kitchen/index"
+    assert payload["token"]
+    assert payload["staff_id"] > 0
+    assert payload["token"]
+    assert payload["staff_id"] > 0
+
+
+def test_wechat_cashier_login_enters_merged_staff_workbench_with_token():
+    client.get("/api/stores/1/catalog")
+
+    response = client.post(
+        "/api/auth/wechat-login",
+        json={"openid": "openid_cashier_001", "store_id": 1},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["role"] == "cashier"
+    assert payload["entry_page"] == "/pages/staff/index"
+    assert payload["token"]
 
 
 def test_admin_login_returns_seeded_role_redirect():
@@ -103,6 +122,26 @@ def test_admin_login_returns_seeded_role_redirect():
     assert payload["profile"]["role"] == "store_owner"
     assert payload["profile"]["storeId"] == 1
     assert payload["redirect"] == "/store"
+
+
+def test_store_owner_admin_token_can_update_wechat_payment_qr():
+    login_response = client.post(
+        "/api/admin/login",
+        json={"username": "boss_store_001", "password": "123456"},
+    )
+    assert login_response.status_code == 200
+
+    response = client.patch(
+        "/api/stores/1/payment-qr",
+        json={
+            "wechat_payment_qr_url": "https://cdn.example.com/store-1/admin-wechat-pay.jpg",
+            "wechat_payment_qr_name": "老板后台收款码",
+        },
+        headers={"Authorization": f"Bearer {login_response.json()['token']}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["wechat_payment_qr_name"] == "老板后台收款码"
 
 
 def test_all_admin_test_accounts_accept_default_password():

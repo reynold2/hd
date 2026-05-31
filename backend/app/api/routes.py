@@ -50,9 +50,13 @@ def get_current_staff(
 ) -> StaffContext:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="authentication required")
+    token = authorization[len("Bearer "):].strip()
     try:
-        return repository.verify_token(authorization[len("Bearer "):].strip())
+        return repository.verify_token(token)
     except ValueError as exc:
+        admin_staff = resolve_admin_token_staff(token, repository)
+        if admin_staff is not None:
+            return admin_staff
         raise HTTPException(status_code=401, detail=str(exc))
 
 
@@ -131,6 +135,12 @@ class UpdateStoreSettingsRequest(BaseModel):
     address: Optional[str] = None
     queue_prefix: Optional[str] = None
     avg_prepare_minutes: Optional[int] = Field(default=None, gt=0)
+    payment_qr: Optional[str] = None
+
+
+class UpdateWechatPaymentQrRequest(BaseModel):
+    wechat_payment_qr_url: str
+    wechat_payment_qr_name: str = "微信收款码"
 
 
 class UpdateStaffStatusRequest(BaseModel):
@@ -223,6 +233,8 @@ class WechatRoleResponse(BaseModel):
     store_id: int
     store: dict
     entry_page: str
+    token: str = ""
+    staff_id: int = 0
 
 
 class ServiceCallResponse(BaseModel):
@@ -234,6 +246,21 @@ class ServiceCallResponse(BaseModel):
     status: str
     handled_by: int = 0
     resolution: str = ""
+
+
+class KitchenQueueItemResponse(BaseModel):
+    number: str
+    store_id: int
+    people_count: int
+    status: str
+    remark: str
+    tags: List[str] = []
+    ticket_source: str = "queue"
+
+
+class KitchenQueueActionRequest(BaseModel):
+    action: str = Field(pattern="^(start|complete)$")
+    call_message: str = "已完成，请取餐"
 
 
 class OperationLogResponse(BaseModel):
@@ -379,6 +406,25 @@ ADMIN_TEST_USERS = [
         "status": "enabled",
     },
 ]
+
+
+ADMIN_STAFF_ROLE_MAP = {
+    "store_owner": "boss",
+    "cashier": "cashier",
+}
+
+
+def resolve_admin_token_staff(token: str, repository: AuthRepository) -> Optional[StaffContext]:
+    if not token.startswith("token_"):
+        return None
+    username = token[len("token_"):]
+    user = next((item for item in ADMIN_TEST_USERS if item["username"] == username), None)
+    if user is None or user.get("status") != "enabled" or not user.get("store_id"):
+        return None
+    staff_role = ADMIN_STAFF_ROLE_MAP.get(user["role"])
+    if not staff_role:
+        return None
+    return repository.staff_context_for_role(int(user["store_id"]), staff_role)
 
 
 def admin_user_payload(user: dict) -> dict:
@@ -581,7 +627,7 @@ def start_preparing(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cook", "kitchen"})
     return run_staff_action(number, "start_preparing", repository, staff)
 
 
@@ -591,7 +637,7 @@ def call_number(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cook"})
     return run_staff_action(number, "call_for_pickup", repository, staff)
 
 
@@ -601,7 +647,7 @@ def mark_dining(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cook"})
     return run_staff_action(number, "mark_dining", repository, staff)
 
 
@@ -618,7 +664,7 @@ def confirm_payment(
     operation_logs: OperationLogRepository = Depends(get_operation_log_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cashier"})
+    require_roles(staff, {"boss", "manager", "staff", "cashier"})
     session = get_session_for_staff(number, staff, repository)
     try:
         session.confirm_payment(payload.payment_method, payload.cashier_id)
@@ -642,7 +688,7 @@ def complete_session(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cashier"})
+    require_roles(staff, {"boss", "manager", "staff", "cashier", "cook", "kitchen"})
     return run_staff_action(number, "complete", repository, staff)
 
 
@@ -652,7 +698,7 @@ def skip_session(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cook"})
     return run_staff_action(number, "skip", repository, staff)
 
 
@@ -662,7 +708,7 @@ def resume_session(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cook"})
     return run_staff_action(number, "resume_after_skip", repository, staff)
 
 
@@ -682,13 +728,99 @@ def mark_unpaid_risk(
     repository: MealSessionRepository = Depends(get_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cashier"})
+    require_roles(staff, {"boss", "manager", "staff", "cashier"})
     return run_staff_action(number, "mark_unpaid_risk", repository, staff)
+
+
+def kitchen_tags(session: MealSession) -> List[str]:
+    tags: List[str] = []
+    if session.people_count:
+        tags.append(f"{session.people_count}人")
+    if session.remark:
+        tags.extend([item.strip() for item in session.remark.replace("\n", "/").split("/") if item.strip()][:2])
+    for item in session.items[:3]:
+        if item.note and item.note.strip():
+            tags.append(item.note.strip())
+    return tags[:3]
 
 
 @router.get("/api/stores/{store_id}/queue", response_model=List[MealSessionResponse])
 def list_store_queue(store_id: int, repository: MealSessionRepository = Depends(get_repository)):
     return [serialize_session(session) for session in repository.list_active(store_id)]
+
+
+@router.get("/api/stores/{store_id}/kitchen/queue", response_model=List[KitchenQueueItemResponse])
+def list_kitchen_queue(store_id: int, repository: MealSessionRepository = Depends(get_repository)):
+    sessions = repository.list_by_status(
+        store_id,
+        [QueueStatus.OCCUPIED, QueueStatus.PREPARING],
+    )
+    return [
+        KitchenQueueItemResponse(
+            number=session.number,
+            store_id=session.store_id,
+            people_count=session.people_count,
+            status=session.status.value if hasattr(session.status, "value") else str(session.status),
+            remark=session.remark,
+            tags=kitchen_tags(session),
+        )
+        for session in sessions
+    ]
+
+
+@router.get("/api/stores/{store_id}/kitchen/completed", response_model=List[KitchenQueueItemResponse])
+def list_kitchen_completed(store_id: int, repository: MealSessionRepository = Depends(get_repository)):
+    sessions = repository.list_by_status(store_id, [QueueStatus.CALLED, QueueStatus.COMPLETED])
+    return [
+        KitchenQueueItemResponse(
+            number=session.number,
+            store_id=session.store_id,
+            people_count=session.people_count,
+            status=session.status.value,
+            remark=session.remark,
+            tags=kitchen_tags(session),
+        )
+        for session in sessions
+    ]
+
+
+@router.post("/api/stores/{store_id}/kitchen/queue/{number}", response_model=KitchenQueueItemResponse)
+def update_kitchen_queue_item(
+    store_id: int,
+    number: str,
+    payload: KitchenQueueActionRequest,
+    repository: MealSessionRepository = Depends(get_repository),
+    service_call_repository: ServiceCallRepository = Depends(get_service_call_repository),
+    staff: StaffContext = Depends(get_current_staff),
+):
+    require_roles(staff, {"boss", "manager", "cook", "kitchen"})
+    require_store(staff, store_id)
+    session = get_session_for_staff(number, staff, repository)
+    try:
+        if payload.action == "start":
+            session = run_staff_action(number, "start_preparing", repository, staff)
+        else:
+            if session.status in {QueueStatus.OCCUPIED, QueueStatus.PREPARING}:
+                session.call_for_pickup()
+                session = repository.save(session)
+            elif session.status != QueueStatus.CALLED:
+                raise ValueError(f"cannot complete kitchen order from {session.status.value}")
+            service_call_repository.create(
+                store_id=store_id,
+                number=number,
+                message=payload.call_message,
+                source="kitchen",
+            )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return KitchenQueueItemResponse(
+        number=session.number,
+        store_id=session.store_id,
+        people_count=session.people_count,
+        status=session.status.value,
+        remark=session.remark,
+        tags=kitchen_tags(session),
+    )
 
 
 @router.post(
@@ -704,7 +836,7 @@ def issue_queue_number(
     operation_logs: OperationLogRepository = Depends(get_operation_log_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager"})
+    require_roles(staff, {"boss", "manager", "staff"})
     require_store(staff, store_id)
     catalog = catalog_repository.get_catalog(store_id)
     number = repository.next_number(store_id, catalog["store"]["queue_prefix"])
@@ -762,7 +894,7 @@ def handle_service_call(
     repository: ServiceCallRepository = Depends(get_service_call_repository),
     staff: StaffContext = Depends(get_current_staff),
 ):
-    require_roles(staff, {"boss", "manager", "cashier", "cook"})
+    require_roles(staff, {"boss", "manager", "staff", "cashier", "cook"})
     try:
         require_store(staff, repository.get_store_id(call_id))
         return repository.handle(call_id, payload.staff_id, payload.resolution)
@@ -808,6 +940,26 @@ def update_store_settings(
             address=payload.address,
             queue_prefix=payload.queue_prefix,
             avg_prepare_minutes=payload.avg_prepare_minutes,
+            payment_qr=payload.payment_qr,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.patch("/api/stores/{store_id}/payment-qr")
+def update_wechat_payment_qr(
+    store_id: int,
+    payload: UpdateWechatPaymentQrRequest,
+    repository: CatalogRepository = Depends(get_catalog_repository),
+    staff: StaffContext = Depends(get_current_staff),
+):
+    require_roles(staff, {"boss"})
+    require_store(staff, store_id)
+    try:
+        return repository.update_wechat_payment_qr(
+            store_id,
+            qr_url=payload.wechat_payment_qr_url,
+            qr_name=payload.wechat_payment_qr_name,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))

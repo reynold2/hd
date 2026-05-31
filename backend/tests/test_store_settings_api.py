@@ -63,12 +63,14 @@ def test_manager_can_update_store_settings_and_staff_status():
             "address": "中山市东区新地址",
             "queue_prefix": "b",
             "avg_prepare_minutes": 25,
+            "payment_qr": "中山店老板微信收款码",
         },
         headers=auth_header("李店长"),
     )
     assert response.status_code == 200
     assert response.json()["queue_prefix"] == "B"
     assert response.json()["business_hours"] == "09:00-21:30"
+    assert response.json()["payment_qr"] == "中山店老板微信收款码"
 
     staff_update = client.patch(
         "/api/staff/4/status",
@@ -77,6 +79,39 @@ def test_manager_can_update_store_settings_and_staff_status():
     )
     assert staff_update.status_code == 200
     assert staff_update.json()["status"] == "inactive"
+
+
+def test_boss_can_configure_wechat_payment_qr_and_catalog_exposes_it():
+    response = client.patch(
+        "/api/stores/1/payment-qr",
+        json={
+            "wechat_payment_qr_url": "https://cdn.example.com/store-1/wechat-pay.jpg",
+            "wechat_payment_qr_name": "中山店微信收款码",
+        },
+        headers=auth_header("张老板"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["wechat_payment_qr_url"] == "https://cdn.example.com/store-1/wechat-pay.jpg"
+    assert response.json()["wechat_payment_qr_name"] == "中山店微信收款码"
+
+    catalog = client.get("/api/stores/1/catalog").json()
+    assert catalog["store"]["wechat_payment_qr_url"] == "https://cdn.example.com/store-1/wechat-pay.jpg"
+    assert catalog["store"]["wechat_payment_qr_name"] == "中山店微信收款码"
+
+
+def test_manager_cannot_configure_wechat_payment_qr():
+    response = client.patch(
+        "/api/stores/1/payment-qr",
+        json={
+            "wechat_payment_qr_url": "https://cdn.example.com/store-1/manager-pay.jpg",
+            "wechat_payment_qr_name": "店长试改",
+        },
+        headers=auth_header("李店长"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "role is not allowed"
 
 
 def test_staff_status_update_rejects_cross_store_access():

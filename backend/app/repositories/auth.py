@@ -18,7 +18,7 @@ ROLE_ENTRY_PAGES = {
     "boss": "/pages/boss/index",
     "staff": "/pages/staff/index",
     "kitchen": "/pages/kitchen/index",
-    "cashier": "/pages/cashier/index",
+    "cashier": "/pages/staff/index",
 }
 
 
@@ -58,6 +58,10 @@ class AuthRepository:
 
     def wechat_login(self, openid: str, store_id: int) -> dict:
         return self.resolve_wechat_role(openid, store_id)
+
+    def staff_context_for_role(self, store_id: int, role: str) -> Optional[StaffContext]:
+        staff = self._find_role_staff(store_id, role)
+        return self._to_context(staff) if staff is not None else None
 
     def issue_token(self, staff: StaffContext) -> str:
         payload = f"{staff.id}:{staff.store_id}:{staff.role}"
@@ -111,7 +115,8 @@ class AuthRepository:
         }
 
     def _role_binding_payload(self, binding: RoleBindingModel, store: dict) -> dict:
-        return {
+        staff = self._find_role_staff(binding.store_id, binding.role)
+        payload = {
             "user_id": binding.user_id,
             "display_name": binding.display_name,
             "openid": binding.openid,
@@ -120,3 +125,19 @@ class AuthRepository:
             "store": store,
             "entry_page": ROLE_ENTRY_PAGES.get(binding.role, "/pages/index/index"),
         }
+        if staff is not None:
+            context = self._to_context(staff)
+            payload["token"] = self.issue_token(context)
+            payload["staff_id"] = context.id
+        return payload
+
+    def _find_role_staff(self, store_id: int, role: str) -> Optional[StaffModel]:
+        if role == "customer":
+            return None
+        staff_role = "cook" if role == "kitchen" else role
+        return self.db.scalar(
+            select(StaffModel)
+            .where(StaffModel.store_id == store_id)
+            .where(StaffModel.role == staff_role)
+            .where(StaffModel.status == "active")
+        )

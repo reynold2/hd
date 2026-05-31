@@ -15,6 +15,7 @@ export type LoginResponse = {
 }
 
 const STORAGE_KEY = 'queue-admin-auth'
+const TOKEN_KEY = 'queue-admin-auth-token'
 let testAuthApiBase: string | null = null
 
 const roleMeta: Record<AdminRole, { title: string; description: string; home: string }> = {
@@ -72,6 +73,7 @@ export async function loginAdmin(username: string, password: string): Promise<Lo
   }
   const payload = (await response.json()) as LoginResponse
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.profile))
+  localStorage.setItem(TOKEN_KEY, payload.token)
   return payload
 }
 
@@ -86,6 +88,7 @@ export function getStoredProfile(): AuthProfile | null {
 
 export function logoutAdmin() {
   localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(TOKEN_KEY)
 }
 
 export function adminLoginHref(base = import.meta.env?.BASE_URL || '') {

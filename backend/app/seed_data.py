@@ -45,6 +45,9 @@ def seed_store(db: Session) -> None:
     store.address = "中山市东区中山三路88号"
     store.queue_prefix = "A"
     store.avg_prepare_minutes = 20
+    store.payment_qr = "川香麻辣烫（中山店）微信收款码"
+    store.wechat_payment_qr_url = "/static/payment-qrs/store-1-wechat-pay.jpg"
+    store.wechat_payment_qr_name = "川香麻辣烫（中山店）微信收款码"
     db.flush()
 
 

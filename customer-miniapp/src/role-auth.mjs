@@ -5,9 +5,8 @@ const DEFAULT_CUSTOMER_NUMBER = 'A018'
 export const miniRoles = [
   { code: 'customer', label: '顾客', page: '/pages/index/index', description: '进店、选菜、绑定、加退菜、支付' },
   { code: 'boss', label: '老板', page: '/pages/boss/index', description: '门店经营与订单总览' },
-  { code: 'staff', label: '服务员', page: '/pages/staff/index', description: '协助加退菜、呼叫处理' },
-  { code: 'kitchen', label: '制作', page: '/pages/kitchen/index', description: '制作队列与出餐状态' },
-  { code: 'cashier', label: '收银', page: '/pages/cashier/index', description: '结算、出码、支付确认' }
+  { code: 'staff', label: '店员', page: '/pages/staff/index', description: '店员统一工作台' },
+  { code: 'kitchen', label: '制作', page: '/pages/kitchen/index', description: '制作队列与出餐状态' }
 ]
 
 export function getStoredRoleProfile() {
@@ -28,12 +27,13 @@ export function clearRoleProfile() {
 }
 
 export function getRoleEntry(roleCode) {
+  if (roleCode === 'cashier') return getRoleEntry('staff')
   return miniRoles.find((item) => item.code === roleCode) || miniRoles[0]
 }
 
 export function buildRoleEntryUrl(profile) {
   const role = getRoleEntry(profile?.role)
-  const page = profile?.entry_page || role.page
+  const page = profile?.role === 'cashier' ? role.page : profile?.entry_page || role.page
   const storeId = Number(profile?.store_id || DEFAULT_STORE_ID)
   const params = [`store_id=${encodeURIComponent(storeId)}`]
   if (role.code === 'customer') {

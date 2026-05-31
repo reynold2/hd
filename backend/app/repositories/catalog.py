@@ -41,6 +41,7 @@ class CatalogRepository:
         address: Optional[str] = None,
         queue_prefix: Optional[str] = None,
         avg_prepare_minutes: Optional[int] = None,
+        payment_qr: Optional[str] = None,
     ) -> Dict:
         store = self._get_or_seed_store(store_id)
         if business_hours is not None:
@@ -56,6 +57,22 @@ class CatalogRepository:
             if avg_prepare_minutes <= 0:
                 raise ValueError("avg_prepare_minutes must be positive")
             store.avg_prepare_minutes = avg_prepare_minutes
+        if payment_qr is not None:
+            store.payment_qr = payment_qr.strip() or store.payment_qr
+        self.db.commit()
+        self.db.refresh(store)
+        return self._store_payload(store)
+
+    def update_wechat_payment_qr(self, store_id: int, qr_url: str, qr_name: str) -> Dict:
+        cleaned_url = qr_url.strip()
+        if not cleaned_url:
+            raise ValueError("wechat_payment_qr_url is required")
+        if not (cleaned_url.startswith("https://") or cleaned_url.startswith("/")):
+            raise ValueError("wechat_payment_qr_url must be https or local asset path")
+        store = self._get_or_seed_store(store_id)
+        store.wechat_payment_qr_url = cleaned_url
+        store.wechat_payment_qr_name = qr_name.strip() or "微信收款码"
+        store.payment_qr = store.wechat_payment_qr_name
         self.db.commit()
         self.db.refresh(store)
         return self._store_payload(store)
@@ -143,6 +160,9 @@ class CatalogRepository:
             address="中山市东区中山三路88号",
             queue_prefix="A",
             avg_prepare_minutes=18,
+            payment_qr="川香麻辣烫（中山店）微信收款码",
+            wechat_payment_qr_url="/static/payment-qrs/store-1-wechat-pay.jpg",
+            wechat_payment_qr_name="川香麻辣烫（中山店）微信收款码",
         )
         self.db.add(store)
         self.db.flush()
@@ -218,6 +238,9 @@ class CatalogRepository:
             "address": store.address,
             "queue_prefix": store.queue_prefix,
             "avg_prepare_minutes": store.avg_prepare_minutes,
+            "payment_qr": store.payment_qr,
+            "wechat_payment_qr_url": store.wechat_payment_qr_url,
+            "wechat_payment_qr_name": store.wechat_payment_qr_name,
         }
 
     def _dish_payload(self, dish: DishModel) -> Dict:

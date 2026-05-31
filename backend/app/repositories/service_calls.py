@@ -14,8 +14,8 @@ class ServiceCallRepository:
         cleaned_message = message.strip()
         if not cleaned_message:
             raise ValueError("service call message is required")
-        if source not in {"staff", "customer", "cashier"}:
-            raise ValueError("service call source must be staff, customer, or cashier")
+        if source not in {"staff", "customer", "cashier", "kitchen"}:
+            raise ValueError("service call source must be staff, customer, cashier, or kitchen")
 
         model = ServiceCallModel(
             store_id=store_id,

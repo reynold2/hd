@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 
-import { appendSessionRemark, createServiceCall, requestCheckout, setApiBaseForTests, wechatLogin } from './api.mjs'
+import {
+  appendSessionRemark,
+  confirmPayment,
+  createServiceCall,
+  handleServiceCall,
+  requestCheckout,
+  setApiBaseForTests,
+  updateWechatPaymentQr,
+  wechatLogin
+} from './api.mjs'
 
 const originalFetch = globalThis.fetch
 
@@ -41,6 +50,60 @@ test('posts service calls and checkout requests with the expected methods', asyn
   assert.deepEqual(JSON.parse(calls[0].options.body), { message: '需要餐巾纸', source: 'customer' })
   assert.equal(calls[1].url, '/api/meal-sessions/A002/actions/request-checkout')
   assert.equal(calls[1].options.method, 'POST')
+})
+
+test('posts staff payment confirmation to the cashier endpoint', async () => {
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ number: 'A005', status: 'paid', payment_method: 'store_qr', cashier_id: 7 })
+  }
+
+  const payload = await confirmPayment('A005', 7)
+
+  assert.equal(payload.status, 'paid')
+  assert.equal(calls[0].url, '/api/meal-sessions/A005/actions/confirm-payment')
+  assert.equal(calls[0].options.method, 'POST')
+  assert.deepEqual(JSON.parse(calls[0].options.body), { payment_method: 'store_qr', cashier_id: 7 })
+})
+
+test('posts staff service handling resolution to the service call endpoint', async () => {
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ id: 12, status: 'handled', resolution: '已处理' })
+  }
+
+  const payload = await handleServiceCall(12, { staff_id: 7, resolution: '已处理' })
+
+  assert.equal(payload.status, 'handled')
+  assert.equal(calls[0].url, '/api/service-calls/12/handle')
+  assert.equal(calls[0].options.method, 'POST')
+  assert.deepEqual(JSON.parse(calls[0].options.body), { staff_id: 7, resolution: '已处理' })
+})
+
+test('posts boss wechat payment qr configuration to store endpoint', async () => {
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({
+      wechat_payment_qr_url: 'https://cdn.example.com/store-1/wechat-pay.jpg',
+      wechat_payment_qr_name: '中山店微信收款码'
+    })
+  }
+
+  const payload = await updateWechatPaymentQr(1, {
+    wechat_payment_qr_url: 'https://cdn.example.com/store-1/wechat-pay.jpg',
+    wechat_payment_qr_name: '中山店微信收款码'
+  })
+
+  assert.equal(payload.wechat_payment_qr_name, '中山店微信收款码')
+  assert.equal(calls[0].url, '/api/stores/1/payment-qr')
+  assert.equal(calls[0].options.method, 'PATCH')
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    wechat_payment_qr_url: 'https://cdn.example.com/store-1/wechat-pay.jpg',
+    wechat_payment_qr_name: '中山店微信收款码'
+  })
 })
 
 test('prefixes customer API requests when an API base is configured', async () => {
