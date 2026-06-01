@@ -7,5 +7,6 @@ const source = readFileSync(new URL('./pages/test-home/index.vue', import.meta.u
 test('test home role cards use real wechat login before entering role pages', () => {
   assert.match(source, /wechatLogin/)
   assert.match(source, /saveRoleProfile\(profile\)/)
-  assert.match(source, /uni\.navigateTo/)
+  assert.match(source, /uni\.reLaunch/)
+  assert.match(source, /entry_page: role\.page/)
 })

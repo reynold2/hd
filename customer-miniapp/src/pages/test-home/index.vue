@@ -26,16 +26,27 @@ onMounted(async () => {
 async function enterAs(role) {
   loadingRole.value = role.code
   notice.value = ''
+  const openid = roleOpenids[role.code]
+  let profile = buildStoredProfile(
+    {
+      role: role.code,
+      display_name: role.label,
+      openid,
+      store_id: 1,
+      entry_page: role.page,
+      number: role.code === 'customer' ? 'A018' : ''
+    },
+    openid
+  )
   try {
-    const openid = roleOpenids[role.code]
     const payload = await wechatLogin({ openid, store_id: 1 })
-    const profile = buildStoredProfile(payload, openid)
-    saveRoleProfile(profile)
-    uni.navigateTo({ url: buildRoleEntryUrl(profile) })
+    profile = buildStoredProfile(payload, openid)
   } catch (error) {
-    notice.value = error instanceof Error ? error.message : '账号进入失败'
+    notice.value = error instanceof Error ? `${error.message}，已先进入页面` : '账号进入失败，已先进入页面'
   } finally {
+    saveRoleProfile(profile)
     loadingRole.value = ''
+    uni.reLaunch({ url: buildRoleEntryUrl(profile) })
   }
 }
 </script>
