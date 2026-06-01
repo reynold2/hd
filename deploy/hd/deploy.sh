@@ -115,6 +115,9 @@ install_backend() {
   fi
   # shellcheck disable=SC1091
   source .venv/bin/activate
+  set -a
+  source .env
+  set +a
   run python -m pip install -r requirements.txt
   run python -m alembic upgrade head
   run python -m app.seed_data

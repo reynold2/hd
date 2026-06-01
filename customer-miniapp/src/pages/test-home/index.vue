@@ -59,17 +59,18 @@ async function enterAs(role) {
         <text>门店 #1 · {{ store?.business_hours || '读取中' }}</text>
       </view>
       <view class="prototype-grid">
-        <button
+        <view
           v-for="role in miniRoles"
           :key="role.code"
           class="prototype-tile"
-          :disabled="loadingRole === role.code"
+          :class="{ 'is-loading': loadingRole === role.code }"
           @click="enterAs(role)"
+          hover-class="prototype-tile-hover"
         >
           <text class="tile-icon">{{ role.label.slice(0, 1) }}</text>
           <text class="tile-title">{{ role.label }}</text>
           <text class="tile-desc">{{ role.description }}</text>
-        </button>
+        </view>
       </view>
     </view>
   </view>

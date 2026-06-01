@@ -390,6 +390,19 @@ textarea {
   gap: 10px;
 }
 
+.prototype-tile {
+  border: 0;
+  text-align: left;
+}
+
+.prototype-tile-hover {
+  transform: translateY(-1px);
+}
+
+.prototype-tile.is-loading {
+  opacity: 0.72;
+}
+
 .kitchen-stats,
 .number-metrics {
   grid-template-columns: repeat(3, 1fr);
