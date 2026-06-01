@@ -16,6 +16,8 @@ def test_hd_deploy_script_uses_isolated_defaults():
     assert 'API_BASE="${API_BASE:-}"' in content
     assert 'BACKEND_PORT="${BACKEND_PORT:-8020}"' in content
     assert "set -a\n  source .env\n  set +a" in content
+    assert "stamp_existing_backend_schema" in content
+    assert "INSERT INTO alembic_version (version_num) VALUES ('20260529_0002')" in content
     assert "ensure_origin_cert" in content
     assert "/www/server/panel/vhost/letsencrypt/hd.yxck3d.tech" in content
     assert "/www/dk_project/wwwroot/yuyue-saas" not in content

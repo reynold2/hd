@@ -119,9 +119,27 @@ install_backend() {
   source .env
   set +a
   run python -m pip install -r requirements.txt
+  stamp_existing_backend_schema
   run python -m alembic upgrade head
   run python -m app.seed_data
   run python -m compileall app
+}
+
+stamp_existing_backend_schema() {
+  python <<'PY'
+import os
+from sqlalchemy import create_engine, inspect, text
+
+database_url = os.environ["DATABASE_URL"]
+engine = create_engine(database_url)
+with engine.begin() as connection:
+    inspector = inspect(connection)
+    tables = set(inspector.get_table_names())
+    if "meal_sessions" not in tables or "alembic_version" in tables:
+        raise SystemExit(0)
+    connection.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)"))
+    connection.execute(text("INSERT INTO alembic_version (version_num) VALUES ('20260529_0002')"))
+PY
 }
 
 install_service() {
