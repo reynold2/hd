@@ -13,9 +13,11 @@ import {
 } from './api.mjs'
 
 const originalFetch = globalThis.fetch
+const originalWx = globalThis.wx
 
 afterEach(() => {
   globalThis.fetch = originalFetch
+  globalThis.wx = originalWx
   setApiBaseForTests('')
 })
 
@@ -130,6 +132,20 @@ test('does not duplicate /api when H5 is deployed at the domain root', async () 
   await requestCheckout('A004')
 
   assert.equal(calls[0].url, '/api/meal-sessions/A004/actions/request-checkout')
+})
+
+test('uses the production domain when a wechat miniapp build omits API base', async () => {
+  setApiBaseForTests(null)
+  globalThis.wx = {}
+  const calls = []
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, options })
+    return okJson({ openid: 'openid_staff_001', role: 'staff', store_id: 1 })
+  }
+
+  await wechatLogin({ openid: 'openid_staff_001', store_id: 1 })
+
+  assert.equal(calls[0].url, 'https://hd.yxck3d.tech/api/auth/wechat-login')
 })
 
 test('posts real wechat login payload to backend auth endpoint', async () => {

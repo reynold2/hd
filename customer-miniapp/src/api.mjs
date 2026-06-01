@@ -1,8 +1,12 @@
 let testApiBase = null
+const WECHAT_PRODUCTION_API_BASE = 'https://hd.yxck3d.tech'
 
 function configuredApiBase() {
   if (testApiBase !== null) return testApiBase
-  return import.meta.env?.VITE_API_BASE || ''
+  const envBase = import.meta.env?.VITE_API_BASE
+  if (envBase) return envBase
+  if (typeof wx !== 'undefined' && typeof window === 'undefined') return WECHAT_PRODUCTION_API_BASE
+  return ''
 }
 
 function apiUrl(path) {
